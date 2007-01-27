@@ -65,7 +65,6 @@ WebDriverServer.prototype.close = function()
 
 WebDriverServer.prototype.sendResponse = function(response)
 {
-	dump("Send response called");
     var toSend = response + "\n";
     this.outstream.write(toSend, toSend.length);
     this.outstream.flush();

@@ -3,7 +3,7 @@ function dumpall(name,obj,niv) {
   var dumpdict=new Object();
 
   dump ("\n\n-------------------------------------------------------\n");
-  dump ("Dump of the objet: " + name + " (" + niv + " levels)\n");
+  dump ("Dump of the object: " + name + " (" + niv + " levels)\n");
   dump ("Address: " + obj + "\n");
   dump ("Interfaces: ");
   for (var i in Components.interfaces) {
