@@ -45,7 +45,7 @@ public class FirefoxDriver implements WebDriver {
 	
 	private WebElement selectElementUsingLink(String linkText) {
 		String elementId = listener.writeAndWaitForResponse("selectElementUsingLink", linkText);
-		if (elementId == null) {
+		if (elementId == null || "".equals(elementId)) {
 			throw new NoSuchElementException("Unable to find " + linkText);
 		}
 		
@@ -54,7 +54,7 @@ public class FirefoxDriver implements WebDriver {
 
 	private WebElement selectElementUsingXPath(String xpath) {		
 		String elementId = listener.writeAndWaitForResponse("selectElementUsingXPath", xpath);
-		if (elementId == null) {
+		if (elementId == null || "".equals(elementId)) {
 			throw new NoSuchElementException("Unable to find " + xpath);
 		}
 		

@@ -28,7 +28,7 @@ class ExtensionListener {
 		String output = command;
 		if (argument != null)
 			output += " " + argument;  // Yes, it's not terribly efficient is it?
-		System.out.println(output);
+//		System.out.println(output);
 		out.println(output);
 		
 		String fullResponse =  waitForResponseFor(command);
@@ -44,10 +44,10 @@ class ExtensionListener {
 	}
 
 	private String readLoop(String command) throws IOException {
-		System.out.println("Waiting for response to: " + command);
+//		System.out.println("Waiting for response to: " + command);
 		while (true) {
 			String response = in.readLine();
-			System.out.println("Have seen: " + response);
+//			System.out.println("Have seen: " + response);
 			if (response.startsWith(command))
 				return response;
 			responses.add(response);

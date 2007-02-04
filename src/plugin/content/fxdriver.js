@@ -7,7 +7,12 @@ FxDriver.prototype.handleData = function(data) {
 	var parts = Command.split(data);
 
     if (parts[0] in this) {
-        this[parts[0]](parts[1]);	
+    	try {
+        	this[parts[0]](parts[1]);	
+    	} catch (e) {
+    		dump(e + "\n");
+    		this.write(parts[0] + " " + e);
+    	}
     } else {
     	dump("Unrecognised command\n");
     }
@@ -123,6 +128,26 @@ FxDriver.prototype.getChildrenOfType = function(args) {
 	this.write("getChildrenOfType " + response);
 }
 
+FxDriver.prototype.getElementText = function(elementId) {
+	var element = this.getElementAt(elementId);
+	this.write("getElementText " + this.getText(element));
+}
+
+FxDriver.prototype.getElementValue = function(elementId) {
+	var element = this.getElementAt(elementId);
+	this.write("getElementValue " + element.getAttribute("value"));
+}
+
+FxDriver.prototype.setElementValue = function(args) {
+	var spaceIndex = args.indexOf(" ");
+	var element = this.getElementAt(args.substring(0, spaceIndex));
+	spaceIndex = args.indexOf(" ", spaceIndex);
+	var newValue = args.substring(spaceIndex + 1);
+	
+	element.setAttribute("value", newValue);
+	this.write("setElementValue ");
+}
+
 FxDriver.prototype.click = function(position) {
 	var index = position.indexOf(" ");
 	index = position.substring(0, index);
@@ -153,24 +178,32 @@ FxDriver.prototype.click = function(position) {
     this.getBrowser().addProgressListener(clickListener)
     
     // Now do the click
-    try {
-    	var button = element.QueryInterface(Components.interfaces.nsIDOMNSHTMLButtonElement);
-    	button.focus();
-    	button.click();
-    } catch (e) {
-    	// It's not a button. That's cool. We'll just send the appropriate mouse event
-        var event = this.getDocument().createEvent("MouseEvents");
-        event.initMouseEvent('click', true, true, null, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-        element.dispatchEvent(event);
-    }
-    
-    // Returning should be handled by the click listener, unless we're not actually loading something. Do a check and return if we are 
-    // There's a race condition here, in that the click event and load may have finished before we get here. For now, let's pretend that
-    // doesn't happen.
-    if (!this.getBrowser().webProgress.isLoadingDocument) {
-    	this.getBrowser().removeProgressListener(clickListener);
-    	this.write("click ");
-    }
+    var driver = this;
+	    try {
+    		var button = element.QueryInterface(Components.interfaces.nsIDOMNSHTMLButtonElement);
+	    	button.focus();
+    		button.click();
+	    } catch (e) {
+    		// It's not a button. That's cool. We'll just send the appropriate mouse event
+        	var event = driver.getDocument().createEvent("MouseEvents");
+	        event.initMouseEvent('click', true, true, null, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+    	    element.dispatchEvent(event);
+	    }
+
+	var checkForLoad = function() {
+		// Returning should be handled by the click listener, unless we're not actually loading something. Do a check and return if we are 
+		// There's a race condition here, in that the click event and load may have finished before we get here. For now, let's pretend that
+		// doesn't happen. The other race condition is that we make this check before the load has begun. With all the javascript out there,
+		// this might actually be a bit of a problem.
+		//    if (!this.getBrowser().webProgress.isLoadingDocument) {
+		var docLoaderService = Components.classes["@mozilla.org/docloaderservice;1"].getService(Components.interfaces.nsIWebProgress);
+		if (!docLoaderService.isLoadingDocument) {
+			driver.getBrowser().removeProgressListener(clickListener);
+			driver.write("click ");
+		}
+	}
+	    		
+    this.getBrowser().contentWindow.setTimeout(checkForLoad, 25);
 };
 
 FxDriver.prototype.clickFinished = function(listener) {
@@ -191,6 +224,7 @@ FxDriver.prototype.getElementAt = function(index) {
 	index = index - 0; // Convert to a number if we're dealing with a string....
 	if (this.getDocument().fxdriver_elements)
 		return this.getDocument().fxdriver_elements[index];
+	return undefined;
 }
 
 FxDriver.prototype.getDocument = function() {
