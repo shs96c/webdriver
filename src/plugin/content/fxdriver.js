@@ -50,7 +50,7 @@ FxDriver.prototype.title = function() {
 };
 
 FxDriver.prototype.selectElementUsingXPath = function(xpath) {
-	var result = this.getDocument().evaluate(xpath, this.getDocument().documentElement, null, Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+	var result = this.getDocument().evaluate(xpath, this.getDocument(), null, Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 	if (result) {
 		var index = this.addToKnownElements(result);
 		this.write("selectElementUsingXPath " + index);
@@ -60,7 +60,7 @@ FxDriver.prototype.selectElementUsingXPath = function(xpath) {
 }
 
 FxDriver.prototype.selectElementsUsingXPath = function(xpath) {
-	var result = this.getDocument().evaluate(xpath, this.getDocument().documentElement, null, Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+	var result = this.getDocument().evaluate(xpath, this.getDocument(), null, Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
 	var response = "";
 	var element = result.iterateNext();
 	while (element) {
@@ -88,7 +88,7 @@ FxDriver.prototype.selectElementUsingLink = function(linkText) {
 }
 
 FxDriver.prototype.selectText = function(xpath) {
-	var result = this.getDocument().evaluate(xpath, this.getDocument().documentElement, null, Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+	var result = this.getDocument().evaluate(xpath, this.getDocument(), null, Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     if (result) {
         // Handle Title elements slightly differently. On the plus side, IE does this too :)
         //             result.QueryInterface(Components.interfaces.nsIDOMHTMLTitleElement);            
@@ -108,6 +108,8 @@ FxDriver.prototype.getText = function(element) {
     for (var i = 0; i < nodes.length; i++) {
         if (nodes[i].nodeName == "#text") {
             str += nodes[i].nodeValue;
+        } else {
+        	str += this.getText(nodes[i]);
         }
     }
     return str;
@@ -144,7 +146,8 @@ FxDriver.prototype.setElementValue = function(args) {
 	spaceIndex = args.indexOf(" ", spaceIndex);
 	var newValue = args.substring(spaceIndex + 1);
 	
-	element.setAttribute("value", newValue);
+	this.type(element, newValue);
+	
 	this.write("setElementValue ");
 }
 
