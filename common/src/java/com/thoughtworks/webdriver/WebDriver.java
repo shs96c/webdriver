@@ -117,7 +117,7 @@ public interface WebDriver {
      * @return The first matching element on the current page
      * @throws NoSuchElementException If no matching elements are found
      */
-    WebElement selectElement(String selector);
+    WebElement findElement(By method);
 
     // Misc
     /**

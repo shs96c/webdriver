@@ -35,40 +35,40 @@ public abstract class JavascriptEnabledDriverTest extends BasicDriverTestCase {
         driver.get(javascriptPage);
 
         assertEquals("Testing Javascript", driver.getTitle());
-        driver.selectElement("link=Change the page title!").click();
+        driver.findElement(By.linkText("Change the page title!")).click();
         assertEquals("Changed", driver.getTitle());
 
-        String titleViaXPath = driver.selectElement("/html/head/title").getText();
+        String titleViaXPath = driver.findElement(By.xpath("/html/head/title")).getText();
         assertEquals("Changed", titleViaXPath);
     }
 
     public void testDocumentShouldReflectLatestDom() throws Exception {
         driver.get(javascriptPage);
-        String currentText = driver.selectElement("//div[@id='dynamo']").getText();
+        String currentText = driver.findElement(By.xpath("//div[@id='dynamo']")).getText();
         assertEquals("What's for dinner?", currentText);
 
-        WebElement webElement = driver.selectElement("link=Update a div");
+        WebElement webElement = driver.findElement(By.linkText("Update a div"));
         webElement.click();
 
-        String newText = driver.selectElement("//div[@id='dynamo']").getText();
+        String newText = driver.findElement(By.xpath("//div[@id='dynamo']")).getText();
         assertEquals("Fish and chips!", newText);
     }
 
     public void testWillSimulateAKeyUpWhenEnteringTextIntoInputElements() {
         driver.get(javascriptPage);
-        WebElement element = driver.selectElement("//input[@id='keyUp']");
+        WebElement element = driver.findElement(By.xpath("//input[@id='keyUp']"));
         element.setValue("I like cheese");
 
-        WebElement result = driver.selectElement("//div[@id='result']");
+        WebElement result = driver.findElement(By.xpath("//div[@id='result']"));
         assertEquals("I like cheese", result.getText());
     }
 
     public void testWillSimulateAKeyDownWhenEnteringTextIntoInputElements() {
         driver.get(javascriptPage);
-        WebElement element = driver.selectElement("//input[@id='keyDown']");
+        WebElement element = driver.findElement(By.xpath("//input[@id='keyDown']"));
         element.setValue("I like cheese");
 
-        WebElement result = driver.selectElement("//div[@id='result']");
+        WebElement result = driver.findElement(By.xpath("//div[@id='result']"));
         // Because the key down gets the result before the input element is
         // filled, we're a letter short here
         assertEquals("I like chees", result.getText());
@@ -76,10 +76,10 @@ public abstract class JavascriptEnabledDriverTest extends BasicDriverTestCase {
 
     public void testWillSimulateAKeyPressWhenEnteringTextIntoInputElements() {
         driver.get(javascriptPage);
-        WebElement element = driver.selectElement("//input[@id='keyPress']");
+        WebElement element = driver.findElement(By.xpath("//input[@id='keyPress']"));
         element.setValue("I like cheese");
 
-        WebElement result = driver.selectElement("//div[@id='result']");
+        WebElement result = driver.findElement(By.xpath("//div[@id='result']"));
         // Because the key down gets the result before the input element is
         // filled, we're a letter short here
         assertEquals("I like chees", result.getText());
@@ -87,19 +87,19 @@ public abstract class JavascriptEnabledDriverTest extends BasicDriverTestCase {
 
     public void testWillSimulateAKeyUpWhenEnteringTextIntoTextAreas() {
         driver.get(javascriptPage);
-        WebElement element = driver.selectElement("//textarea[@id='keyUpArea']");
+        WebElement element = driver.findElement(By.xpath("//textarea[@id='keyUpArea']"));
         element.setValue("I like cheese");
 
-        WebElement result = driver.selectElement("//div[@id='result']");
+        WebElement result = driver.findElement(By.xpath("//div[@id='result']"));
         assertEquals("I like cheese", result.getText());
     }
 
     public void testWillSimulateAKeyDownWhenEnteringTextIntoTextAreas() {
         driver.get(javascriptPage);
-        WebElement element = driver.selectElement("//textarea[@id='keyDownArea']");
+        WebElement element = driver.findElement(By.xpath("//textarea[@id='keyDownArea']"));
         element.setValue("I like cheese");
 
-        WebElement result = driver.selectElement("//div[@id='result']");
+        WebElement result = driver.findElement(By.xpath("//div[@id='result']"));
         // Because the key down gets the result before the input element is
         // filled, we're a letter short here
         assertEquals("I like chees", result.getText());
@@ -107,10 +107,10 @@ public abstract class JavascriptEnabledDriverTest extends BasicDriverTestCase {
 
     public void testWillSimulateAKeyPressWhenEnteringTextIntoTextAreas() {
         driver.get(javascriptPage);
-        WebElement element = driver.selectElement("//textarea[@id='keyPressArea']");
+        WebElement element = driver.findElement(By.xpath("//textarea[@id='keyPressArea']"));
         element.setValue("I like cheese");
 
-        WebElement result = driver.selectElement("//div[@id='result']");
+        WebElement result = driver.findElement(By.xpath("//div[@id='result']"));
         // Because the key down gets the result before the input element is
         // filled, we're a letter short here
         assertEquals("I like chees", result.getText());
@@ -118,70 +118,70 @@ public abstract class JavascriptEnabledDriverTest extends BasicDriverTestCase {
 
     public void testShouldIssueMouseDownEvents() {
         driver.get(javascriptPage);
-        driver.selectElement("//div[@id='mousedown']").click();
+        driver.findElement(By.xpath("//div[@id='mousedown']")).click();
 
-        String result = driver.selectElement("//div[@id='result']").getText();
+        String result = driver.findElement(By.xpath("//div[@id='result']")).getText();
         assertEquals("mouse down", result);
     }
 
     public void testShouldIssueClickEvents() {
         driver.get(javascriptPage);
-        driver.selectElement("//div[@id='mouseclick']").click();
+        driver.findElement(By.xpath("//div[@id='mouseclick']")).click();
 
-        String result = driver.selectElement("//div[@id='result']").getText();
+        String result = driver.findElement(By.xpath("//div[@id='result']")).getText();
         assertEquals("mouse click", result);
     }
 
     public void testShouldIssueMouseUpEvents() {
         driver.get(javascriptPage);
-        driver.selectElement("//div[@id='mouseup']").click();
+        driver.findElement(By.xpath("//div[@id='mouseup']")).click();
 
-        String result = driver.selectElement("//div[@id='result']").getText();
+        String result = driver.findElement(By.xpath("//div[@id='result']")).getText();
         assertEquals("mouse up", result);
     }
 
     public void testMouseEventsShouldBubbleUpToContainingElements() {
         driver.get(javascriptPage);
-        driver.selectElement("//p[@id='child']").click();
+        driver.findElement(By.xpath("//p[@id='child']")).click();
 
-        String result = driver.selectElement("//div[@id='result']").getText();
+        String result = driver.findElement(By.xpath("//div[@id='result']")).getText();
         assertEquals("mouse down", result);
     }
 
     public void testShouldEmitOnChangeEventsWhenSelectingElements() {
         driver.get(javascriptPage);
-        WebElement select = driver.selectElement("id=selector");
+        WebElement select = driver.findElement(By.id("selector"));
         List allOptions = select.getChildrenOfType("option");
 
-        String initialTextValue = driver.selectElement("id=result").getText();
+        String initialTextValue = driver.findElement(By.id("result")).getText();
 
         WebElement foo = (WebElement) allOptions.get(0);
         WebElement bar = (WebElement) allOptions.get(1);
 
         foo.setSelected();
-        assertEquals(initialTextValue, driver.selectElement("id=result").getText());
+        assertEquals(initialTextValue, driver.findElement(By.id("result")).getText());
         bar.setSelected();
-        assertEquals("bar", driver.selectElement("id=result").getText());
+        assertEquals("bar", driver.findElement(By.id("result")).getText());
     }
 
     public void testShouldEmitOnChangeEventsWhenChnagingTheStateOfACheckbox() {
         driver.get(javascriptPage);
-        WebElement checkbox = driver.selectElement("id=checkbox");
+        WebElement checkbox = driver.findElement(By.id("checkbox"));
 
         checkbox.setSelected();
-        assertEquals("checkbox thing", driver.selectElement("id=result").getText());
+        assertEquals("checkbox thing", driver.findElement(By.id("result")).getText());
     }
 
 //    public void testShouldAllowTheUserToOkayConfirmAlerts() {
 //		driver.get(alertPage);
-//		driver.selectElement("id=confirm").click();
+//		driver.findElement(By.id("confirm").click();
 //		driver.switchTo().alert().accept();
 //		assertEquals("Hello WebDriver", driver.getTitle());
 //	}
 //
 //	public void testShouldAllowUserToDismissAlerts() {
 //		driver.get(alertPage);
-//		driver.selectElement("id=confirm").click();
+//		driver.findElement(By.id("confirm").click();
 //
 //		driver.switchTo().alert().dimiss();
 //		assertEquals("Testing Alerts", driver.getTitle());
@@ -189,7 +189,7 @@ public abstract class JavascriptEnabledDriverTest extends BasicDriverTestCase {
 //
 //	public void testShouldBeAbleToGetTheTextOfAnAlert() {
 //		driver.get(alertPage);
-//		driver.selectElement("id=confirm").click();
+//		driver.findElement(By.id("confirm").click();
 //
 //		String alertText = driver.switchTo().alert().getText();
 //		assertEquals("Are you sure?", alertText);
@@ -197,7 +197,7 @@ public abstract class JavascriptEnabledDriverTest extends BasicDriverTestCase {
 //
 //	public void testShouldThrowAnExceptionIfAnAlertIsBeingDisplayedAndTheUserAttemptsToCarryOnRegardless() {
 //		driver.get(alertPage);
-//		driver.selectElement("id=confirm").click();
+//		driver.findElement(By.id("confirm").click();
 //
 //		try {
 //			driver.get(simpleTestPage);
@@ -211,15 +211,15 @@ public abstract class JavascriptEnabledDriverTest extends BasicDriverTestCase {
     public void testShouldAllowTheUserToTellIfAnElementIsDisplayedOrNot() {
         driver.get(javascriptPage);
 
-        assertTrue(driver.selectElement("id=displayed").isDisplayed());
-        assertFalse(driver.selectElement("id=none").isDisplayed());
-        assertFalse(driver.selectElement("id=hidden").isDisplayed());
+        assertTrue(driver.findElement(By.id("displayed")).isDisplayed());
+        assertFalse(driver.findElement(By.id("none")).isDisplayed());
+        assertFalse(driver.findElement(By.id("hidden")).isDisplayed());
     }
 
     public void testShouldWaitForLoadsToCompleteAfterJavascriptCausesANewPageToLoad() {
         driver.get(formPage);
 
-        driver.selectElement("id=changeme").setSelected();
+        driver.findElement(By.id("changeme")).setSelected();
 
         assertEquals("Page3", driver.getTitle());
     }

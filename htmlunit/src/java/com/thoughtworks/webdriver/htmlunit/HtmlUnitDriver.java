@@ -24,12 +24,12 @@ import com.thoughtworks.webdriver.Alert;
 import com.thoughtworks.webdriver.NoSuchElementException;
 import com.thoughtworks.webdriver.WebDriver;
 import com.thoughtworks.webdriver.WebElement;
+import com.thoughtworks.webdriver.By;
 import org.jaxen.JaxenException;
 import org.jaxen.XPath;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class HtmlUnitDriver implements WebDriver {
@@ -114,15 +114,15 @@ public class HtmlUnitDriver implements WebDriver {
         return this;
     }
 
-  @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     public List<WebElement> selectElements(String selector) {
         try {
             HtmlUnitXPath xpath = new HtmlUnitXPath(selector);
             List<HtmlElement> nodes = xpath.selectNodes(lastPage());
             List<WebElement> elements = new ArrayList<WebElement>();
 
-            for (int i = 0; i < nodes.size(); i++) {
-                elements.add(new HtmlUnitWebElement(this, nodes.get(i)));
+            for (HtmlElement node : nodes) {
+                elements.add(new HtmlUnitWebElement(this, node));
             }
 
             return elements;
@@ -131,13 +131,19 @@ public class HtmlUnitDriver implements WebDriver {
         }
     }
 
-    public WebElement selectElement(String selector) {
-        if (selector.startsWith("link=")) {
-            return selectLinkWithText(selector);
-        } else if (selector.startsWith("id=")) {
-            return selectElementById(selector);
-        } else {
-            return selectElementUsingXPath(selector);
+    public WebElement findElement(By method) {
+        switch(method.getHow()) {
+            case ID:
+                return selectElementById(method.getValue());
+
+            case LINK:
+                return selectLinkWithText(method.getValue());
+
+            case XPATH:
+                return selectElementUsingXPath(method.getValue());
+
+            default:
+                throw new RuntimeException("Unsupported element finder mechanism: " + method.getHow());
         }
     }
 
@@ -161,14 +167,9 @@ public class HtmlUnitDriver implements WebDriver {
     }
 
     @SuppressWarnings("unchecked")
-    private WebElement selectLinkWithText(String selector) {
-        int equalsIndex = selector.indexOf('=') + 1;
-        String expectedText = selector.substring(equalsIndex).trim();
-
+    private WebElement selectLinkWithText(String expectedText) {
         List<HtmlAnchor> anchors = lastPage().getAnchors();
-        Iterator<HtmlAnchor> allAnchors = anchors.iterator();
-        while (allAnchors.hasNext()) {
-            HtmlAnchor anchor = allAnchors.next();
+        for (HtmlAnchor anchor : anchors) {
             if (expectedText.equals(anchor.asText())) {
                 return new HtmlUnitWebElement(this, anchor);
             }
@@ -176,10 +177,7 @@ public class HtmlUnitDriver implements WebDriver {
         throw new NoSuchElementException("No link found with text: " + expectedText);
     }
 
-    private WebElement selectElementById(String selector) {
-        int equalsIndex = selector.indexOf('=') + 1;
-        String id = selector.substring(equalsIndex).trim();
-
+    private WebElement selectElementById(String id) {
         try {
             HtmlElement element = lastPage().getHtmlElementById(id);
             return new HtmlUnitWebElement(this, element);
