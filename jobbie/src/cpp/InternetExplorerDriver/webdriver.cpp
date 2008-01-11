@@ -8,6 +8,10 @@ struct WebDriver {
        InternetExplorerDriver *ie;
 };
 
+struct WebElement {
+		ElementWrapper *element;
+};
+
 extern "C"
 {
 WebDriver* webdriver_newDriverInstance()
@@ -20,6 +24,7 @@ WebDriver* webdriver_newDriverInstance()
 
     return driver;
 }
+
 void webdriver_deleteDriverInstance(WebDriver* driver)
 {
 	driver->ie->close();

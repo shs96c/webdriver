@@ -11,6 +11,9 @@ extern "C" {
 struct WebDriver;
 typedef struct WebDriver WebDriver;
 
+struct WebElement;
+typedef struct WebElement WebElement;
+
 EXPORT WebDriver* webdriver_newDriverInstance();
 EXPORT void webdriver_deleteDriverInstance(WebDriver* handle);
 

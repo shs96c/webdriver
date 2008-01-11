@@ -26,6 +26,7 @@ InternetExplorerDriver::InternetExplorerDriver()
 
 	currentFrame = -1;
 
+	closeCalled = false;
 //	sink = new IeEventSink(ie);
 }
 
@@ -41,8 +42,9 @@ InternetExplorerDriver::~InternetExplorerDriver()
 
 void InternetExplorerDriver::close()
 {
-	if (closeCalled)
+	if (closeCalled) {
 		return;
+	}
 
 	ie->Quit();
 	closeCalled = true;
