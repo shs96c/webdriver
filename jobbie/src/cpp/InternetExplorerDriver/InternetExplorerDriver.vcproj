@@ -20,8 +20,8 @@
 			OutputDirectory="..\..\..\build"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="1"
-			UseOfATL="1"
+			UseOfMFC="0"
+			UseOfATL="2"
 			CharacterSet="1"
 			ManagedExtensions="0"
 			>
@@ -267,6 +267,10 @@
 				RelativePath=".\utils.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\webdriver.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -339,6 +343,10 @@
 			</File>
 			<File
 				RelativePath=".\utils.h"
+				>
+			</File>
+			<File
+				RelativePath=".\webdriver.h"
 				>
 			</File>
 		</Filter>

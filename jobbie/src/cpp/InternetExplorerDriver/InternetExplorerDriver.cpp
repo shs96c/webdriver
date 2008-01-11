@@ -19,7 +19,7 @@ long queryCount = 0;
 
 InternetExplorerDriver::InternetExplorerDriver()
 {
-	if (!SUCCEEDED(CoCreateInstance(CLSID_InternetExplorer, NULL, CLSCTX_LOCAL_SERVER, IID_IWebBrowser2, (void**)&ie))) 
+	if (!SUCCEEDED(CoCreateInstance(CLSID_InternetExplorer, NULL, CLSCTX_ALL, IID_IWebBrowser2, (void**)&ie))) 
 	{
 		throw "Cannot create InternetExplorer instance";
 	}
@@ -195,17 +195,16 @@ void InternetExplorerDriver::waitForNavigateToFinish()
 		ie->get_ReadyState(&readyState);
 	}
 
-	CComPtr<IDispatch> dispatch = NULL;
+	CComPtr<IDispatch> dispatch;;
 	ie->get_Document(&dispatch);
-	IHTMLDocument2* doc = NULL;
-	dispatch->QueryInterface(__uuidof(IHTMLDocument2), (void**)&doc);
+	CComQIPtr<IHTMLDocument2, &__uuidof(IHTMLDocument2)>doc(dispatch);
 	
 	waitForDocumentToComplete(doc);
 
 	IHTMLFramesCollection2* frames = NULL;
 	doc->get_frames(&frames);
 
-	if (frames != NULL) {
+	if (frames) {
 		long framesLength = 0;
 		frames->get_length(&framesLength);
 
@@ -232,10 +231,8 @@ void InternetExplorerDriver::waitForNavigateToFinish()
 		}
 
 		VariantClear(&index);
-		frames->Release();
 	}
-
-	doc->Release();
+	frames->Release();
 }
 
 void InternetExplorerDriver::waitForDocumentToComplete(IHTMLDocument2* doc)
