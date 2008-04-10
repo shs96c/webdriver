@@ -54,6 +54,32 @@ const wchar_t* webdriver_getCurrentUrl(WebDriver* driver)
 	return toReturn;
 }
 
+WebElement* webdriver_findElementById(WebDriver* handle, const wchar_t* id)
+{
+	ElementWrapper* wrapper = handle->ie->selectElementById(id);
+	if (wrapper)
+	{
+		WebElement* element = new WebElement();
+		element->element = wrapper;
+		return element;
+	}
+
+	return NULL;
+}
+
+WebElement* webdriver_findElementByLinkText(WebDriver* handle, const wchar_t* linkText)
+{
+	ElementWrapper* wrapper = handle->ie->selectElementByLink(linkText);
+	if (wrapper)
+	{
+		WebElement* element = new WebElement();
+		element->element = wrapper;
+		return element;
+	}
+
+	return NULL;
+}
+
 WebElement* webdriver_findElementByName(WebDriver* driver, const wchar_t* name)
 {
 	ElementWrapper* wrapper = driver->ie->selectElementByName(name);
@@ -73,8 +99,30 @@ void webdriver_deleteElementInstance(WebElement* handle)
     delete handle;
 }
 
+void webdriver_elementClear(WebElement* handle)
+{
+	handle->element->clear();
+}
+
 void webdriver_elementSendKeys(WebElement* handle, const wchar_t* text)
 {
 	handle->element->sendKeys(text);
+}
+
+void webdriver_elementSubmit(WebElement* handle)
+{
+	handle->element->submit();
+}
+
+void webdriver_elementClick(WebElement* handle)
+{
+	handle->element->click();
+}
+
+std::wstring returnAttributeString;
+const wchar_t* webdriver_elementGetAttribute(WebElement* handle, const wchar_t* attributeName)
+{
+	returnAttributeString = handle->element->getAttribute(attributeName);
+	return returnAttributeString.c_str();
 }
 }

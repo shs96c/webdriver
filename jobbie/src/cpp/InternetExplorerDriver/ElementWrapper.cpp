@@ -20,13 +20,13 @@ ElementWrapper::~ElementWrapper()
 {
 }
 
-std::wstring ElementWrapper::getAttribute(const std::wstring& name) 
+std::wstring ElementWrapper::getAttribute(const wchar_t* name) 
 {
 	CComBSTR attributeName;
-	if (_wcsicmp(L"class", name.c_str()) == 0) {
+	if (_wcsicmp(L"class", name) == 0) {
 		attributeName = L"className";
 	} else {
-		attributeName = name.c_str();
+		attributeName = name;
 	}
 
 	CComVariant value;

@@ -37,19 +37,47 @@ namespace com.googlecode.webdriver.ie
         {
             get
             {
-                Console.WriteLine("Getting current url: " + handle);
                 return webdriver_getCurrentUrl(handle);
             }
         }
 
         [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
-        private static extern IntPtr webdriver_findElementByName(IntPtr handle,
-            [MarshalAs(UnmanagedType.LPWStr)]
-            String url);
+        private static extern IntPtr webdriver_findElementById(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] String id);
+        [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
+        private static extern IntPtr webdriver_findElementByLinkText(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] String linkText);
+        [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
+        private static extern IntPtr webdriver_findElementByName(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] String name);
         public IWebElement FindOneElement(By mechanism, string locator)
         {
-            IntPtr rawElement = webdriver_findElementByName(handle, locator);
-            return new InternetExplorerWebElement(rawElement);
+            IntPtr rawElement;
+
+            try
+            {
+                switch (mechanism)
+                {
+                    case By.ID:
+                        rawElement = webdriver_findElementById(handle, locator);
+                        break;
+
+                    case By.LINK_TEXT:
+                        rawElement = webdriver_findElementByLinkText(handle, locator);
+                        break;
+
+                    case By.NAME:
+                        rawElement = webdriver_findElementByName(handle, locator);
+                        break;
+
+                    default:
+                        throw new ArgumentException("Unrecognised element location mechanism: " + mechanism);
+                }
+
+                return new InternetExplorerWebElement(rawElement);
+            }
+            catch (SEHException)
+            {
+                // Unable to find the element
+                return null;
+            }
         }
 
         [DllImport("InternetExplorerDriver")]

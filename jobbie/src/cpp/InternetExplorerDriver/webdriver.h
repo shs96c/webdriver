@@ -23,9 +23,17 @@ EXPORT void webdriver_close(WebDriver* driver);
 
 EXPORT const wchar_t* webdriver_getCurrentUrl(WebDriver* driver);
 
+EXPORT WebElement* webdriver_findElementById(WebDriver* handle, const wchar_t* id);
+EXPORT WebElement* webdriver_findElementByLinkText(WebDriver* handle, const wchar_t* linkText);
 EXPORT WebElement* webdriver_findElementByName(WebDriver* handle, const wchar_t* name);
 
+EXPORT void webdriver_elementClear(WebElement* handle);
 EXPORT void webdriver_elementSendKeys(WebElement* handle, const wchar_t* text);
+EXPORT void webdriver_elementSubmit(WebElement* handle);
+
+EXPORT void webdriver_elementClick(WebElement* handle);
+
+EXPORT const wchar_t* webdriver_elementGetAttribute(WebElement* handle, const wchar_t* attributeName);
 
 #ifdef __cplusplus
 }

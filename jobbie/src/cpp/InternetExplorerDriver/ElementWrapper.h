@@ -17,7 +17,7 @@ public:
 	ElementWrapper(InternetExplorerDriver* ie, IHTMLDOMNode *node);
 	~ElementWrapper();
 
-	std::wstring getAttribute(const std::wstring& name);
+	std::wstring getAttribute(const wchar_t* name);
 	std::wstring getValue();
 	void sendKeys(const wchar_t* newValue);
 	void clear();

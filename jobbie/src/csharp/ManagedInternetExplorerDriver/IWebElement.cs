@@ -6,6 +6,13 @@ namespace com.googlecode.webdriver
 {
     public interface IWebElement
     {
+        void Clear();
         void SendKeys(string text);
+
+        void Submit();
+
+        void Click();
+
+        string GetAttribute(string attributeName);
     }
 }

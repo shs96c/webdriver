@@ -16,7 +16,13 @@ namespace com.googlecode.webdriver.ie
             Console.WriteLine("URL is: " + driver.CurrentUrl);
 
             IWebElement query = driver.FindOneElement(By.NAME, "q");
+            query.Clear();
             query.SendKeys("cheese");
+            query.Submit();
+
+            IWebElement link = driver.FindOneElement(By.LINK_TEXT, "Cheese - Wikipedia, the free encyclopedia");
+            Console.WriteLine(link.GetAttribute("href"));
+            link.Click();
 
             System.Threading.Thread.Sleep(5000);
         }
