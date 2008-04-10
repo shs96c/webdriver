@@ -16,7 +16,6 @@ namespace com.googlecode.webdriver.ie
             handle = webdriver_newDriverInstance();
         }
 
-
         [DllImport("InternetExplorerDriver")]
         private static extern void webdriver_deleteDriverInstance(IntPtr handle);
         ~InternetExplorerDriver()
@@ -41,6 +40,14 @@ namespace com.googlecode.webdriver.ie
                 Console.WriteLine("Getting current url: " + handle);
                 return webdriver_getCurrentUrl(handle);
             }
+        }
+
+        [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
+        private static extern IntPtr webdriver_findElementByName(IntPtr handle, string url);
+        public IWebElement FindOneElement(By mechanism, string locator)
+        {
+            IntPtr rawElement = webdriver_findElementByName(handle, locator);
+            return new InternetExplorerWebElement(rawElement);
         }
 
         [DllImport("InternetExplorerDriver")]

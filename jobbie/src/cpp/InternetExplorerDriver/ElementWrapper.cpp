@@ -46,8 +46,10 @@ std::wstring ElementWrapper::getValue()
 	return getAttribute(L"value");
 }
 
-void ElementWrapper::sendKeys(const std::wstring& newValue)
+void ElementWrapper::sendKeys(const wchar_t* newValue)
 {
+	wcout << "Typing: " << newValue << endl;
+
 	bool initialVis = ie->getVisible();
 	// Bring the IE window to the front.
 	HWND hWnd = ie->bringToFront();
@@ -64,7 +66,7 @@ void ElementWrapper::sendKeys(const std::wstring& newValue)
 	// Allow the element to actually get the focus
 	Sleep(100);
 
-	for (const wchar_t *p = newValue.c_str(); *p; ++p)
+	for (const wchar_t *p = newValue; *p; ++p)
 	{
 		wchar_t c = *p;
 

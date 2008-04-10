@@ -13,6 +13,8 @@ namespace com.googlecode.webdriver
 
         void Get(string url);
 
+        IWebElement FindOneElement(By mechanism, string locator);
+
         void Close();
     }
 }

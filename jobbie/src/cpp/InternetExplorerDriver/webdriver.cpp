@@ -54,4 +54,28 @@ const wchar_t* webdriver_getCurrentUrl(WebDriver* driver)
 	return toReturn;
 }
 
+WebElement* webdriver_findElementByName(WebDriver* driver, const wchar_t* name)
+{
+	ElementWrapper* wrapper = driver->ie->selectElementByName(name);
+	if (wrapper)
+	{
+		WebElement* element = new WebElement();
+		element->element = wrapper;
+		return element;
+	}
+
+	return NULL;
+}
+
+void webdriver_deleteElementInstance(WebElement* handle)
+{
+	delete handle->element;
+    delete handle;
+}
+
+void webdriver_elementSendKeys(WebElement* handle, const wchar_t* text)
+{
+	printf("Original: %s\n", text);
+	handle->element->sendKeys(text);
+}
 }

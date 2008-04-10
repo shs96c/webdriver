@@ -19,7 +19,7 @@ public:
 
 	std::wstring getAttribute(const std::wstring& name);
 	std::wstring getValue();
-	void sendKeys(const std::wstring& newValue);
+	void sendKeys(const wchar_t* newValue);
 	void clear();
 	bool isSelected();
 	void setSelected();

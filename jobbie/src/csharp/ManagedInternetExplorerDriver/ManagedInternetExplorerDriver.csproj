@@ -33,7 +33,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="By.cs" />
     <Compile Include="InternetExplorerDriver.cs" />
+    <Compile Include="InternetExplorerWebElement.cs" />
+    <Compile Include="IWebElement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IWebDriver.cs" />
   </ItemGroup>

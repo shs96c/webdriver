@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using com.googlecode.webdriver;
-using com.googlecode.webdriver.ie;
 
-namespace com.googlecode.webdriver.ie.ManagedInternetExplorerDriverTests
+namespace com.googlecode.webdriver.ie
 {
     class Example
     {
@@ -15,6 +14,12 @@ namespace com.googlecode.webdriver.ie.ManagedInternetExplorerDriverTests
             driver.Get("http://www.google.com");
 
             Console.WriteLine("URL is: " + driver.CurrentUrl);
+
+            IWebElement query = driver.FindOneElement(By.NAME, "q");
+            query.SendKeys("cheese");
+
+            Console.WriteLine("\nDang");
+            System.Threading.Thread.Sleep(5000);
         }
     }
 }
