@@ -20,7 +20,9 @@ namespace com.googlecode.webdriver.ie
         }
 
         [DllImport("InternetExplorerDriver")]
-        private static extern void webdriver_elementSendKeys(IntPtr handle, string text);
+        private static extern void webdriver_elementSendKeys(IntPtr handle,
+            [MarshalAs(UnmanagedType.LPWStr)]
+            string text);
         public void SendKeys(string text)
         {
             webdriver_elementSendKeys(handle, text);

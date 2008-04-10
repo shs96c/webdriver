@@ -18,7 +18,6 @@ namespace com.googlecode.webdriver.ie
             IWebElement query = driver.FindOneElement(By.NAME, "q");
             query.SendKeys("cheese");
 
-            Console.WriteLine("\nDang");
             System.Threading.Thread.Sleep(5000);
         }
     }

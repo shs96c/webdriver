@@ -48,8 +48,6 @@ std::wstring ElementWrapper::getValue()
 
 void ElementWrapper::sendKeys(const wchar_t* newValue)
 {
-	wcout << "Typing: " << newValue << endl;
-
 	bool initialVis = ie->getVisible();
 	// Bring the IE window to the front.
 	HWND hWnd = ie->bringToFront();

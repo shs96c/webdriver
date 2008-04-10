@@ -75,7 +75,6 @@ void webdriver_deleteElementInstance(WebElement* handle)
 
 void webdriver_elementSendKeys(WebElement* handle, const wchar_t* text)
 {
-	printf("Original: %s\n", text);
 	handle->element->sendKeys(text);
 }
 }
