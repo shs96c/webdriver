@@ -119,10 +119,18 @@ void webdriver_elementClick(WebElement* handle)
 	handle->element->click();
 }
 
-std::wstring returnAttributeString;
-const wchar_t* webdriver_elementGetAttribute(WebElement* handle, const wchar_t* attributeName)
+size_t webdriver_elementGetAttributeLength(WebElement* handle, const wchar_t* attributeName)
 {
-	returnAttributeString = handle->element->getAttribute(attributeName);
-	return returnAttributeString.c_str();
+	std::wstring text = handle->element->getAttribute(attributeName);
+	return text.length() + 1;
+}
+
+void webdriver_elementGetAttribute(WebElement* handle, const wchar_t* attributeName, wchar_t* result, size_t length)
+{
+	std::wstring returnAttributeString = handle->element->getAttribute(attributeName);
+
+	*result = (wchar_t) CoTaskMemAlloc(sizeof(wchar_t) * length);
+	::ZeroMemory(result, sizeof(wchar_t) * length);
+	wcscpy_s(result, returnAttributeString.length() + 1, returnAttributeString.c_str());
 }
 }

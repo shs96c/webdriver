@@ -33,7 +33,8 @@ EXPORT void webdriver_elementSubmit(WebElement* handle);
 
 EXPORT void webdriver_elementClick(WebElement* handle);
 
-EXPORT const wchar_t* webdriver_elementGetAttribute(WebElement* handle, const wchar_t* attributeName);
+EXPORT size_t webdriver_elementGetAttributeLength(WebElement* handle, const wchar_t* attributeName);
+EXPORT void webdriver_elementGetAttribute(WebElement* handle, const wchar_t* attributeName, wchar_t* result, size_t resultLength);
 
 #ifdef __cplusplus
 }

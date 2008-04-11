@@ -48,12 +48,17 @@ namespace com.googlecode.webdriver.ie
         }
 
         [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
-        private static extern IntPtr webdriver_elementGetAttribute(
-            IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] string attributeName);
+        private static extern uint webdriver_elementGetAttributeLength(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] string attributeName);
+        [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
+        private static extern void webdriver_elementGetAttribute(
+            IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] string attributeName, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder res, uint resLength);
         public string GetAttribute(string attributeName)
         {
-            IntPtr result = webdriver_elementGetAttribute(handle, attributeName);
-            return Marshal.PtrToStringUni(result);
+            uint length = webdriver_elementGetAttributeLength(handle, attributeName);
+            StringBuilder result = new StringBuilder((int) length + 1);
+            webdriver_elementGetAttribute(handle, attributeName, result, length + 1);
+            Console.WriteLine("In method: " + result);
+            return result.ToString();
         }
 
         private IntPtr handle;
