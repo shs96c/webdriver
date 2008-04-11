@@ -133,9 +133,6 @@ size_t webdriver_elementGetAttributeLength(WebElement* handle, const wchar_t* at
 void webdriver_elementGetAttribute(WebElement* handle, const wchar_t* attributeName, wchar_t* result, size_t length)
 {
 	std::wstring returnAttributeString = handle->element->getAttribute(attributeName);
-
-	*result = (wchar_t) CoTaskMemAlloc(sizeof(wchar_t) * length);
-	::ZeroMemory(result, sizeof(wchar_t) * length);
 	wcscpy_s(result, returnAttributeString.length() + 1, returnAttributeString.c_str());
 }
 
@@ -148,9 +145,6 @@ size_t webdriver_elementGetTextLength(WebElement* handle)
 void webdriver_elementGetText(WebElement* handle, wchar_t* result, size_t length)
 {
 	std::wstring text = handle->element->getText();
-
-	*result = (wchar_t) CoTaskMemAlloc(sizeof(wchar_t) * length);
-	::ZeroMemory(result, sizeof(wchar_t) * length);
 	wcscpy_s(result, text.length() + 1, text.c_str());
 }
 }
