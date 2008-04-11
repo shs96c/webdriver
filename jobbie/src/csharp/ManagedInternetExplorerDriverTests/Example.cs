@@ -22,6 +22,9 @@ namespace com.googlecode.webdriver.ie
 
             IWebElement link = driver.FindOneElement(By.LINK_TEXT, "Cheese - Wikipedia, the free encyclopedia");
             Console.WriteLine("Returned: " + link.GetAttribute("href"));
+
+            Console.WriteLine("Is link visible? " + link.Visible);
+            Console.WriteLine("Link text: " + link.Text);
             link.Click();
 
             System.Threading.Thread.Sleep(5000);

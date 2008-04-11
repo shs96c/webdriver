@@ -12,6 +12,30 @@ namespace com.googlecode.webdriver.ie
             this.handle = handle;
         }
 
+        [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
+        private static extern uint webdriver_elementGetTextLength(IntPtr handle);
+        [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
+        private static extern void webdriver_elementGetText(
+            IntPtr handle, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder res, uint resLength);
+        public string Text
+        {
+            get 
+            {
+                uint length = webdriver_elementGetTextLength(handle);
+                StringBuilder result = new StringBuilder((int) length);
+                webdriver_elementGetText(handle, result, length);
+                return result.ToString();
+            }
+        }
+
+
+        [DllImport("InternetExplorerDriver")]
+        private static extern bool webdriver_isElementVisible(IntPtr handle);
+        public bool Visible
+        {
+            get { return webdriver_isElementVisible(handle); }
+        }
+	
         [DllImport("InternetExplorerDriver")]
         private static extern void webdriver_deleteElementInstance(IntPtr handle);
         ~InternetExplorerWebElement()
@@ -55,9 +79,8 @@ namespace com.googlecode.webdriver.ie
         public string GetAttribute(string attributeName)
         {
             uint length = webdriver_elementGetAttributeLength(handle, attributeName);
-            StringBuilder result = new StringBuilder((int) length + 1);
-            webdriver_elementGetAttribute(handle, attributeName, result, length + 1);
-            Console.WriteLine("In method: " + result);
+            StringBuilder result = new StringBuilder((int) length);
+            webdriver_elementGetAttribute(handle, attributeName, result, length);
             return result.ToString();
         }
 
