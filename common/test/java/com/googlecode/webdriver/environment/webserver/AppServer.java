@@ -17,6 +17,8 @@
 
 package com.googlecode.webdriver.environment.webserver;
 
+import javax.servlet.Servlet;
+
 public interface AppServer {
     String getHostName();
     String getAlternateHostName();
@@ -28,4 +30,6 @@ public interface AppServer {
     void stop();
 
     void addAdditionalWebApplication(String context, String absolutePath);
+    void addServlet(String name, String url, Class<? extends Servlet> servletClass);
+    void listenOn(int port);
 }

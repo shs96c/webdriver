@@ -28,52 +28,40 @@ import org.mortbay.jetty.Server;
 import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
+import javax.servlet.Servlet;
+
 public class Jetty6AppServer implements AppServer {
-    private final int port;
+    private int port;
     private File path;
     private final Server server = new Server();
+    private WebAppContext context;
 
     public Jetty6AppServer() {
         port = 3000;
-        findRootOfWebApp();
+        path = findRootOfWebApp();
 
-        WebAppContext context = addWebApplication("", path.getAbsolutePath());
+        context = addWebApplication("", path.getAbsolutePath());
 
-        addRedirectorServlet(context);
-
-        addInfinitePagesServlet(context);
+        addServlet("Redirecter", "/redirect", RedirectServlet.class);
+        addServlet("InfinitePagerServer", "/page/*", PageServlet.class);
     }
 
-    private void findRootOfWebApp() {
+    protected File findRootOfWebApp() {
         String[] possiblePaths = {
             "common/src/web",
             "../common/src/web",
           };
 
+        File current = null;
         for (String potential : possiblePaths) {
-            path = new File(potential);
-            if (path.exists()) {
-                break;
+            current = new File(potential);
+            if (current.exists()) {
+                return current;
             }
         }
 
         Assert.assertTrue("Unable to find common web files. These are located in the common directory", path.exists());
-    }
-
-    private void addRedirectorServlet(WebAppContext context) {
-        try {
-            context.addServlet(RedirectServlet.class, "/redirect");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void addInfinitePagesServlet(WebAppContext context) {
-        try {
-            context.addServlet(PageServlet.class, "/page/*");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return null;
     }
 
     public String getHostName() {
@@ -97,7 +85,9 @@ public class Jetty6AppServer implements AppServer {
     }
     
     public void start() {
-        listenOn(port);
+        SelectChannelConnector connector = new SelectChannelConnector();
+        connector.setPort(port);
+        server.addConnector(connector);
 
         try {
             server.start();
@@ -106,10 +96,8 @@ public class Jetty6AppServer implements AppServer {
         }
     }
 
-    protected void listenOn(int thisPort) {
-    	SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setPort(port);
-        server.addConnector(connector);
+    public void listenOn(int port) {
+        this.port = port;
     }
 
     protected void addListener(Connector listener) {
@@ -124,15 +112,25 @@ public class Jetty6AppServer implements AppServer {
         }
     }
 
+    public void addServlet(String name, String url, Class<? extends Servlet> servletClass) {
+        try {
+            context.addServlet(servletClass, url);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
     public void addAdditionalWebApplication(String context, String absolutePath) {
         addWebApplication(context, absolutePath);
     }
 
     private WebAppContext addWebApplication(String contextPath, String absolutePath) {
-    	WebAppContext app = new WebAppContext();
-    	app.setContextPath(contextPath);
-    	app.setWar(absolutePath);
-		server.addHandler(app);
-		return app;
-    }
+        WebAppContext app = new WebAppContext();
+        app.setContextPath(contextPath);
+        app.setWar(absolutePath);
+                server.addHandler(app);
+                return app;
+    }    
 }
