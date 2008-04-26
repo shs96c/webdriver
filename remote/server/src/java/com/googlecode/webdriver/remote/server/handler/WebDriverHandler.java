@@ -5,6 +5,7 @@ import com.googlecode.webdriver.remote.Context;
 import com.googlecode.webdriver.remote.SessionId;
 import com.googlecode.webdriver.remote.server.DriverSessions;
 import com.googlecode.webdriver.remote.server.Session;
+import com.googlecode.webdriver.remote.server.KnownElements;
 import com.googlecode.webdriver.remote.server.rest.Handler;
 
 public abstract class WebDriverHandler implements Handler {
@@ -35,5 +36,9 @@ public abstract class WebDriverHandler implements Handler {
     protected WebDriver getDriver() {
         Session session = sessions.get(sessionId);
         return  session.getDriver(context);
+    }
+
+    protected KnownElements getKnownElements() {
+        return sessions.get(sessionId).getKnownElements();
     }
 }

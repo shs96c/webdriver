@@ -2,6 +2,8 @@ package com.googlecode.webdriver.remote;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
@@ -13,7 +15,8 @@ import java.util.Map;
 
 public class BeanToJsonConverter {
     public String convert(Object toConvert) throws Exception {
-        return realConvert(toConvert).toString();
+        Object returned = realConvert(toConvert);
+        return returned == null ? null : returned.toString();
     }
 
     private Object realConvert(Object toConvert) throws Exception {
@@ -24,8 +27,12 @@ public class BeanToJsonConverter {
             return convertArray(toConvert);        
 
         // Assume that strings have already been converted
-        if (isPrimitiveType(toConvert) || toConvert instanceof String)
+        if (isPrimitiveType(toConvert))
             return toConvert;
+
+        if (toConvert instanceof String) {
+            return toConvert;
+        }
 
         if (toConvert instanceof Map)
             return convertMap((Map) toConvert);
@@ -111,8 +118,12 @@ public class BeanToJsonConverter {
             if (read == null)
                 continue;
 
-            Object result = read.invoke(toConvert);
-            json.put(property.getName(), realConvert(result));
+            try {
+                Object result = read.invoke(toConvert);
+                json.put(property.getName(), realConvert(result));
+            } catch (Exception e) {
+                // Skip this property
+            }
         }
 
         return json;

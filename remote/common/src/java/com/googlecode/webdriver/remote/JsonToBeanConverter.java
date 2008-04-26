@@ -13,6 +13,9 @@ import java.util.Map;
 
 public class JsonToBeanConverter {
     public <T> T convert(Class<T> clazz, Object text) throws Exception {
+        if (text == null)
+            return null;
+
         if (String.class.equals(clazz)) {
             return (T) text;
         }

@@ -71,6 +71,15 @@ public class BeanToJsonConverterTest extends TestCase {
         new BeanToJsonConverter().convert(WithMethods.CHEESE);
     }
 
+    public void testNullAndAnEmptyStringAreEncodedDifferently() throws Exception {
+        BeanToJsonConverter converter = new BeanToJsonConverter();
+
+        String nullValue = converter.convert(null);
+        String emptyString = converter.convert("");
+
+        assertFalse(emptyString.equals(nullValue));
+    }
+    
     private static class SimpleBean {
         public String getFoo() {
             return "bar";

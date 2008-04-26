@@ -21,7 +21,9 @@ public class JsonResult implements Renderer {
         Object result = request.getAttribute(propertyName);
         String json = new BeanToJsonConverter().convert(result);
 
-        response.setContentLength(json.getBytes().length);
+        int length = json == null ? 0 : json.getBytes().length;
+
+        response.setContentLength(length);
         response.setContentType("application/json");
         response.getWriter().append(json).flush();
     }

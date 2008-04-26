@@ -24,8 +24,8 @@ public class DriverServlet extends HttpServlet {
 		super.init();
 	
 		DriverSessions driverSessions = new DriverSessions();
-		
-		getMapper = new UrlMapper(driverSessions);
+
+        getMapper = new UrlMapper(driverSessions);
 		postMapper = new UrlMapper(driverSessions);
 		
 		postMapper.bind("/session", NewSession.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context"));
@@ -37,6 +37,15 @@ public class DriverServlet extends HttpServlet {
         getMapper.bind("/session/:sessionId/:context/url", GetCurrentUrl.class).on(ResultType.SUCCESS, new JsonResult(":url"));
 
         getMapper.bind("/session/:sessionId/:context/title", GetTitle.class).on(ResultType.SUCCESS, new JsonResult(":title"));
+
+        postMapper.bind("/session/:sessionId/:context/visible", SetVisible.class).on(ResultType.SUCCESS, new EmptyResult());
+        getMapper.bind("/session/:sessionId/:context/visible", GetVisible.class).on(ResultType.SUCCESS, new JsonResult(":visible"));
+
+        postMapper.bind("/session/:sessionId/:context/element", FindElement.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context/element/:element"));
+        getMapper.bind("/session/:sessionId/:context/element/:elementId", DescribeElement.class).on(ResultType.SUCCESS, new JsonResult(":element"));
+
+        getMapper.bind("/session/:sessionId/:context/element/:id/value", GetElementValue.class).on(ResultType.SUCCESS, new JsonResult(":value"));
+        getMapper.bind("/session/:sessionId/:context/element/:id/:name", GetElementAttribute.class).on(ResultType.SUCCESS, new JsonResult(":value"));
     }
 	
 	@Override

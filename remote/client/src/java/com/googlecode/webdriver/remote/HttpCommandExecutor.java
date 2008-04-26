@@ -20,10 +20,16 @@ public class HttpCommandExecutor implements CommandExecutor {
 		client = new HttpClient();
 		client.getHostConfiguration().setHost("localhost", 7055);
 		
-        nameToUrl.put("newSession", new CommandInfo("/session", POST));
-		nameToUrl.put("get",        new CommandInfo("/session/:sessionId/:context/url", POST));
-		nameToUrl.put("currentUrl", new CommandInfo("/session/:sessionId/:context/url", GET));
-        nameToUrl.put("getTitle",   new CommandInfo("/session/:sessionId/:context/title", GET));
+        nameToUrl.put("newSession",   new CommandInfo("/session", POST));
+		nameToUrl.put("get",          new CommandInfo("/session/:sessionId/:context/url", POST));
+		nameToUrl.put("currentUrl",   new CommandInfo("/session/:sessionId/:context/url", GET));
+        nameToUrl.put("getTitle",     new CommandInfo("/session/:sessionId/:context/title", GET));
+        nameToUrl.put("setVisible",   new CommandInfo("/session/:sessionId/:context/visible", POST));
+        nameToUrl.put("getVisible",   new CommandInfo("/session/:sessionId/:context/visible", GET));
+        nameToUrl.put("findElement",  new CommandInfo("/session/:sessionId/:context/element", POST));
+
+        nameToUrl.put("getElementAttribute", new CommandInfo("/session/:sessionId/:context/element/:id/:name", GET));
+        nameToUrl.put("getElementValue",     new CommandInfo("/session/:sessionId/:context/element/:id/value", GET));
     }
 	
 	public Response execute(Command command) throws Exception {
@@ -37,6 +43,7 @@ public class HttpCommandExecutor implements CommandExecutor {
         if (httpMethod instanceof PostMethod)
             ((PostMethod) httpMethod).setRequestEntity(new StringRequestEntity(payload, "application/json", "UTF-8"));
 
+        System.out.println("httpMethod = " + httpMethod.getURI());
         client.executeMethod(httpMethod);
 
         // TODO: SimonStewart: 2008-04-25: This is really shabby
@@ -56,6 +63,9 @@ public class HttpCommandExecutor implements CommandExecutor {
     private Response createResponse(HttpMethod httpMethod) throws IOException {
         Response response = new Response();
         response.setError(httpMethod.getStatusCode() != HttpStatus.SC_OK);
+
+        System.out.println("httpMethod.getResponseHeader(\"content-length\").getValue() = " + httpMethod.getResponseHeader("content-length").getValue());
+        
         response.setText(httpMethod.getResponseBodyAsString());
 
         String uri = httpMethod.getURI().toString();
@@ -112,6 +122,11 @@ public class HttpCommandExecutor implements CommandExecutor {
                 return command.getSessionId().toString();
             if ("context".equals(propertyName))
                 return command.getContext().toString();
+
+            // Attempt to extract the property name from the parameters
+            if (command.getParameters().length > 0 && command.getParameters()[0] instanceof Map) {
+                return String.valueOf(((Map) command.getParameters()[0]).get(propertyName));
+            }
 
             return "place-holder";
         }

@@ -77,6 +77,18 @@ public class JsonToBeanConverterTest extends TestCase {
         assertEquals(capabilities, readCapabilities);
     }
 
+    public void testShouldBeAbleToInstantiateBooleans() throws Exception {
+        JSONArray array = new JSONArray();
+        array.add(true);
+        array.add(false);
+
+        boolean first = new JsonToBeanConverter().convert(Boolean.class, array.get(0));
+        boolean second = new JsonToBeanConverter().convert(Boolean.class, array.get(1));
+
+        assertTrue(first);
+        assertFalse(second);
+    }
+
     public static class SimpleBean {
         private String value;
 
