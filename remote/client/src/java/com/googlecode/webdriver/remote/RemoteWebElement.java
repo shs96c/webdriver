@@ -24,7 +24,7 @@ public class RemoteWebElement implements WebElement {
     }
 
     public void click() {
-        throw new UnsupportedOperationException();
+        parent.execute("clickElement", map("id", id));
     }
 
     public void submit() {
@@ -64,7 +64,8 @@ public class RemoteWebElement implements WebElement {
     }
 
     public String getText() {
-        return (String) parent.execute("getElementText", map("id", id)).getValue();
+        Response response = parent.execute("getElementText", map("id", id));
+        return (String) response.getValue();
     }
 
     public List<WebElement> getChildrenOfType(String tagName) {

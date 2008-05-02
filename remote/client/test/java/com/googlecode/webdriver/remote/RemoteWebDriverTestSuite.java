@@ -12,7 +12,7 @@ import junit.extensions.TestSetup;
 import java.io.File;
 
 public class RemoteWebDriverTestSuite {
-    public static Test suite() {
+    public static Test suite() throws Exception {
         Test rawSuite =
             new TestSuiteBuilder()
                     .addSourceDir("common")

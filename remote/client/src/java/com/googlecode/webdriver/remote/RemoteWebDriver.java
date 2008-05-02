@@ -98,7 +98,7 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
         throw new UnsupportedOperationException();
     }// Misc
     public String getPageSource() {
-        throw new UnsupportedOperationException();
+        return (String) execute("pageSource").getValue();
     }
 
     public void close() {

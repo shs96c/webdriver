@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.LinkedHashSet;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -24,8 +25,9 @@ public class TestSuiteBuilder {
 	private boolean withEnvironment = true;
 	private String onlyRun;
 	private String testMethodName;
+    private Set<String> decorators = new LinkedHashSet();
 
-	public TestSuiteBuilder() {
+    public TestSuiteBuilder() {
 		String[] possiblePaths = { "common", "../common", };
 
 		for (String potential : possiblePaths) {
@@ -75,7 +77,7 @@ public class TestSuiteBuilder {
 		return this;
 	}
 
-	public Test create() {
+	public Test create() throws Exception {
 		if (withDriver)
 			assertThat("No driver class set", driverClass, is(notNullValue()));
 
@@ -90,10 +92,23 @@ public class TestSuiteBuilder {
 		else 
 			toReturn.addTest(suite);
 
-		return toReturn;
+        return decorate(toReturn);
 	}
 
-	private void addTestsRecursively(TestSuite suite, File dir) {
+    private Test decorate(TestSuite toDecorate) throws Exception {
+        TestSuite toReturn = toDecorate;
+
+        for (String name : decorators) {
+            TestSuite temp = new TestSuite();
+            Test test = (Test) Class.forName(name).getConstructor(Test.class).newInstance(toReturn);
+            temp.addTest(test);
+            toReturn = temp;
+        }
+
+        return toReturn;
+    }
+
+    private void addTestsRecursively(TestSuite suite, File dir) {
 		File[] files = dir.listFiles();
 		for (File file : files) {
 			if (file.isDirectory()) {
@@ -219,4 +234,9 @@ public class TestSuiteBuilder {
 		
 		return this;
 	}
+
+    public TestSuiteBuilder addSuiteDecorator(String decoratorClassName) {
+        decorators.add(decoratorClassName);
+        return this;
+    }
 }

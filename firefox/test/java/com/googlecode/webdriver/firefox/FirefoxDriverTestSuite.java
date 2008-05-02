@@ -5,7 +5,7 @@ import junit.framework.Test;
 import com.googlecode.webdriver.TestSuiteBuilder;
 
 public class FirefoxDriverTestSuite {
-	public static Test suite() {
+	public static Test suite() throws Exception {
 		return new TestSuiteBuilder()
 					.addSourceDir("firefox")
 					.addSourceDir("common")

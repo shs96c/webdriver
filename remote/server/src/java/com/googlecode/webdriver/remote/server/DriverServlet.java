@@ -36,6 +36,8 @@ public class DriverServlet extends HttpServlet {
         postMapper.bind("/session/:sessionId/:context/url", ChangeUrl.class).on(ResultType.SUCCESS, new EmptyResult());
         getMapper.bind("/session/:sessionId/:context/url", GetCurrentUrl.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
+        getMapper.bind("/session/:sessionId/:context/source", GetPageSource.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+
         getMapper.bind("/session/:sessionId/:context/title", GetTitle.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
         postMapper.bind("/session/:sessionId/:context/visible", SetVisible.class).on(ResultType.SUCCESS, new EmptyResult());
@@ -44,6 +46,7 @@ public class DriverServlet extends HttpServlet {
         postMapper.bind("/session/:sessionId/:context/element", FindElement.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context/element/:element"));
         getMapper.bind("/session/:sessionId/:context/element/:elementId", DescribeElement.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
+        postMapper.bind("/session/:sessionId/:context/element/:id/click", ClickElement.class).on(ResultType.SUCCESS, new EmptyResult());
         getMapper.bind("/session/:sessionId/:context/element/:id/text", GetElementText.class).on(ResultType.SUCCESS, new JsonResult(":response"));
         postMapper.bind("/session/:sessionId/:context/element/:id/submit", SubmitElement.class).on(ResultType.SUCCESS, new EmptyResult());
 

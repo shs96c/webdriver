@@ -2,11 +2,11 @@ package com.googlecode.webdriver.remote.server.rest;
 
 import com.googlecode.webdriver.remote.server.DriverSessions;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class UrlMapper {
-    private Set<ResultConfig> configs = new HashSet<ResultConfig>();
+    private Set<ResultConfig> configs = new LinkedHashSet<ResultConfig>();
 	private final DriverSessions sessions;
 
 	public UrlMapper(DriverSessions sessions) {

@@ -9,16 +9,24 @@ public class SingleTestSuite {
     private final static String REMOTE = "com.googlecode.webdriver.remote.RemoteWebDriverTestSuite$RemoteWebDriverForTest";
     private final static String SAFARI = "com.googlecode.webdriver.safari.SafariDriver";
 
-    public static Test suite() {
-		return new TestSuiteBuilder()
-				    	.addSourceDir("common")
+    public static Test suite() throws Exception {
+        String driver = REMOTE;
+
+        TestSuiteBuilder builder = new TestSuiteBuilder()
+              .addSourceDir("common")
 //              .addSourceDir("firefox")
-              .usingDriver(IE)
+              .usingDriver(driver)
               .keepDriverInstance()
               .includeJavascriptTests()
-              .onlyRun("XPathElementFindingTest")
-              .method("testShouldBeAbleToSearchForMultipleAttributes")
-    //                    .leaveRunningAfterTest()
-              .create();
-	}
+              .onlyRun("TextHandlingTest")
+              .method("testShouldReturnEmptyStringWhenTextIsOnlySpaces")
+    //                    .leaveRunningAfterTest();
+            ;  // Yeah, this look strange :)
+
+        if (REMOTE.equals(driver)) {
+            builder.addSuiteDecorator("com.googlecode.webdriver.remote.RemoteWebDriverTestSuite$RemoteDriverServerStarter");
+        }
+
+        return builder.create();
+    }
 }

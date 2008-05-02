@@ -146,7 +146,7 @@ public class TextHandlingTest extends AbstractDriverTestCase {
     	assertThat(text, is("Some text" + newLine + "Some more text"));
     }
 
-    @Ignore("htmlunit, firefox, safari")
+    @Ignore("htmlunit, firefox, safari, remote")
     public void testShouldHandleNestedBlockLevelElements() {
     	driver.get(simpleTestPage);
     	
@@ -155,7 +155,7 @@ public class TextHandlingTest extends AbstractDriverTestCase {
     	assertThat(text, is("Cheese " + newLine + "Some text" + newLine + "Some more text" + newLine + "and also" + newLine + "Brie"));
     }
 
-    @Ignore("htmlunit, firefox, safari")
+    @Ignore("htmlunit, firefox, safari, remote")
     public void testShouldHandleWhitespaceInInlineElements() {
     	driver.get(simpleTestPage);
     	

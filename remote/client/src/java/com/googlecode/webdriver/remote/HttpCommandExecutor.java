@@ -23,18 +23,18 @@ public class HttpCommandExecutor implements CommandExecutor {
 		nameToUrl.put("get",          new CommandInfo("/session/:sessionId/:context/url", POST));
 		nameToUrl.put("currentUrl",   new CommandInfo("/session/:sessionId/:context/url", GET));
         nameToUrl.put("getTitle",     new CommandInfo("/session/:sessionId/:context/title", GET));
+        nameToUrl.put("pageSource",   new CommandInfo("/session/:sessionId/:context/source", GET));
         nameToUrl.put("setVisible",   new CommandInfo("/session/:sessionId/:context/visible", POST));
         nameToUrl.put("getVisible",   new CommandInfo("/session/:sessionId/:context/visible", GET));
         nameToUrl.put("findElement",  new CommandInfo("/session/:sessionId/:context/element", POST));
 
+        nameToUrl.put("clickElement",        new CommandInfo("/session/:sessionId/:context/element/:id/click", POST));
         nameToUrl.put("submitElement",       new CommandInfo("/session/:sessionId/:context/element/:id/submit", POST));
         nameToUrl.put("getElementText",      new CommandInfo("/session/:sessionId/:context/element/:id/text", GET));
         nameToUrl.put("sendKeys",            new CommandInfo("/session/:sessionId/:context/element/:id/value", POST));
         nameToUrl.put("getElementValue",     new CommandInfo("/session/:sessionId/:context/element/:id/value", GET));
 
-
         nameToUrl.put("getElementAttribute", new CommandInfo("/session/:sessionId/:context/element/:id/:name", GET));
-
     }
 	
 	public Response execute(Command command) throws Exception {

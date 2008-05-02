@@ -28,6 +28,9 @@ public class JsonToBeanConverter {
             return (T) convertEnum(clazz, text);
         }
 
+        if ("".equals(String.valueOf(text)))
+            return (T) text;
+
         Object o;
         try {
             o = new JSONParser().parse(new StringReader(String.valueOf(text)));
@@ -86,7 +89,13 @@ public class JsonToBeanConverter {
 
             Class<?> type = write.getParameterTypes()[0];
 
-            write.invoke(t, convert(type, value));
+            try {
+                write.invoke(t, convert(type, value));
+            } catch (Exception e) {
+                throw new Exception(
+                        String.format("Property name: %s -> %s on class %s", property.getName(), value, type),
+                        e);
+            }
         }
 
         return t;

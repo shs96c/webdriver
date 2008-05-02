@@ -98,12 +98,17 @@ public class JsonToBeanConverterTest extends TestCase {
     }
 
     public void testShouldConvertAResponseWithAnElementInIt() throws Exception {
-        // Lifted straight from a debugging session
-        String json = "{\"value\":{\"value\":\"\",\"text\":\"\",\"selected\":false,\"enabled\":true,\"id\":\"three\"},\"context\":{},\"sessionId\":{},\"error\":false}";
+        String json = "{\"value\":{\"value\":\"\",\"text\":\"\",\"selected\":false,\"enabled\":true,\"id\":\"three\"},\"context\":\"con\",\"sessionId\":\"sess\",\"error\":false}";
         Response converted = new JsonToBeanConverter().convert(Response.class, json);
 
         Map value = (Map) converted.getValue();
         assertEquals("three", value.get("id"));
+    }
+    
+    public void testConvertABlankStringAsAStringEvenWhenAskedToReturnAnObject() throws Exception {
+        Object o = new JsonToBeanConverter().convert(Object.class, "");
+
+        assertTrue(o instanceof String);
     }
 
     public static class SimpleBean {
