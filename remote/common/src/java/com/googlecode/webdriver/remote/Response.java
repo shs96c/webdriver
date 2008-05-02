@@ -2,11 +2,16 @@ package com.googlecode.webdriver.remote;
 
 public class Response {
     private boolean isError;
-    private String text;
+    private Object value;
     private String sessionId;
     private String context;
 
     public Response() {
+    }
+
+    public Response(SessionId sessionId, Context context) {
+        this.sessionId = String.valueOf(sessionId);
+        this.context = String.valueOf(context);
     }
 
     public void setError(boolean isError) {
@@ -17,31 +22,31 @@ public class Response {
         return isError;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setValue(Object value) {
+        this.value = value;
     }
 
-    public String getResponseText() {
-        return text;
+    public Object getValue() {
+        return value;
     }    
 
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
     }
 
-    public SessionId getSessionId() {
-    	return new SessionId(sessionId);
+    public String getSessionId() {
+    	return sessionId;
     }
 
     public void setContext(String context) {
         this.context = context;
     }
 
-    public Context getContext() {
-    	return new Context(context);
+    public String getContext() {
+    	return context;
     }
 
     public String toString() {
-        return String.format("(%s %s %s: %s)", getSessionId(), getContext(), isError(), getResponseText());
+        return String.format("(%s %s %s: %s)", getSessionId(), getContext(), isError(), getValue());
     }
 }

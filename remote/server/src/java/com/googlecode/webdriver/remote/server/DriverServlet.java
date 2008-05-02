@@ -31,21 +31,26 @@ public class DriverServlet extends HttpServlet {
 		postMapper.bind("/session", NewSession.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context"));
 		getMapper.bind("/session/:sessionId/:context", GetSessionCapabilities.class)
 			.on(ResultType.SUCCESS, new ForwardResult("/WEB-INF/views/sessionCapabilities.jsp"))
-			.on(ResultType.SUCCESS, new JsonResult(":capabilities"), "application/json");
+			.on(ResultType.SUCCESS, new JsonResult(":response"), "application/json");
 
         postMapper.bind("/session/:sessionId/:context/url", ChangeUrl.class).on(ResultType.SUCCESS, new EmptyResult());
-        getMapper.bind("/session/:sessionId/:context/url", GetCurrentUrl.class).on(ResultType.SUCCESS, new JsonResult(":url"));
+        getMapper.bind("/session/:sessionId/:context/url", GetCurrentUrl.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
-        getMapper.bind("/session/:sessionId/:context/title", GetTitle.class).on(ResultType.SUCCESS, new JsonResult(":title"));
+        getMapper.bind("/session/:sessionId/:context/title", GetTitle.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
         postMapper.bind("/session/:sessionId/:context/visible", SetVisible.class).on(ResultType.SUCCESS, new EmptyResult());
-        getMapper.bind("/session/:sessionId/:context/visible", GetVisible.class).on(ResultType.SUCCESS, new JsonResult(":visible"));
+        getMapper.bind("/session/:sessionId/:context/visible", GetVisible.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
         postMapper.bind("/session/:sessionId/:context/element", FindElement.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context/element/:element"));
-        getMapper.bind("/session/:sessionId/:context/element/:elementId", DescribeElement.class).on(ResultType.SUCCESS, new JsonResult(":element"));
+        getMapper.bind("/session/:sessionId/:context/element/:elementId", DescribeElement.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
-        getMapper.bind("/session/:sessionId/:context/element/:id/value", GetElementValue.class).on(ResultType.SUCCESS, new JsonResult(":value"));
-        getMapper.bind("/session/:sessionId/:context/element/:id/:name", GetElementAttribute.class).on(ResultType.SUCCESS, new JsonResult(":value"));
+        getMapper.bind("/session/:sessionId/:context/element/:id/text", GetElementText.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+        postMapper.bind("/session/:sessionId/:context/element/:id/submit", SubmitElement.class).on(ResultType.SUCCESS, new EmptyResult());
+
+        postMapper.bind("/session/:sessionId/:context/element/:id/value", SendKeys.class).on(ResultType.SUCCESS, new EmptyResult());
+        getMapper.bind("/session/:sessionId/:context/element/:id/value", GetElementValue.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+
+        getMapper.bind("/session/:sessionId/:context/element/:id/:name", GetElementAttribute.class).on(ResultType.SUCCESS, new JsonResult(":response"));
     }
 	
 	@Override

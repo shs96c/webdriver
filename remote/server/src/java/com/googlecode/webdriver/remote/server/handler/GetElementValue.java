@@ -2,10 +2,11 @@ package com.googlecode.webdriver.remote.server.handler;
 
 import com.googlecode.webdriver.remote.server.rest.ResultType;
 import com.googlecode.webdriver.remote.server.DriverSessions;
+import com.googlecode.webdriver.remote.Response;
 
 public class GetElementValue extends WebDriverHandler {
     private String elementId;
-    private String value;
+    private Response response;
 
     public GetElementValue(DriverSessions sessions) {
         super(sessions);
@@ -16,12 +17,13 @@ public class GetElementValue extends WebDriverHandler {
     }
 
     public ResultType handle() throws Exception {
-        value = getKnownElements().get(elementId).getValue();
+        response = newResponse();
+        response.setValue(getKnownElements().get(elementId).getValue());
 
         return ResultType.SUCCESS;
     }
 
-    public String getValue() {
-        return value;
+    public Response getResponse() {
+        return response;
     }
 }

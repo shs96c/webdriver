@@ -2,21 +2,23 @@ package com.googlecode.webdriver.remote.server.handler;
 
 import com.googlecode.webdriver.remote.server.DriverSessions;
 import com.googlecode.webdriver.remote.server.rest.ResultType;
+import com.googlecode.webdriver.remote.Response;
 
 public class GetTitle extends WebDriverHandler {
-    private String title;
+    private Response response;
 
     public GetTitle(DriverSessions sessions) {
         super(sessions);
     }
 
     public ResultType handle() throws Exception {
-        title = getDriver().getTitle();
+        response = newResponse();
+        response.setValue(getDriver().getTitle());
         return ResultType.SUCCESS;
     }
 
-    public String getTitle() {
-        return title;
+    public Response getResponse() {
+        return response;
     }
 
 }

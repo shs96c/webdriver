@@ -2,20 +2,23 @@ package com.googlecode.webdriver.remote.server.handler;
 
 import com.googlecode.webdriver.remote.server.DriverSessions;
 import com.googlecode.webdriver.remote.server.rest.ResultType;
+import com.googlecode.webdriver.remote.Response;
 
 public class GetCurrentUrl extends WebDriverHandler {
     private String url;
+    private Response response;
 
     public GetCurrentUrl(DriverSessions sessions) {
         super(sessions);
     }
 
     public ResultType handle() throws Exception {
-        url = getDriver().getCurrentUrl();
+        response = newResponse();
+        response.setValue(getDriver().getCurrentUrl());
         return ResultType.SUCCESS;
     }
 
-    public String getUrl() {
-        return url;
+    public Response getResponse() {
+        return response;
     }
 }

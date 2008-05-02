@@ -19,6 +19,7 @@ public class JsonResult implements Renderer {
 
 	public void render(HttpServletRequest request, HttpServletResponse response, Handler handler) throws Exception {
         Object result = request.getAttribute(propertyName);
+
         String json = new BeanToJsonConverter().convert(result);
 
         int length = json == null ? 0 : json.getBytes().length;

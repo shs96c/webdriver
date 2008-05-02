@@ -9,6 +9,7 @@ import com.googlecode.webdriver.internal.FindsByName;
 import com.googlecode.webdriver.internal.FindsByXPath;
 
 import java.util.List;
+import java.util.Map;
 
 public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, FindsByName, FindsByXPath {
 	private CommandExecutor executor;
@@ -19,10 +20,9 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 		executor = new HttpCommandExecutor();
 
         Response response = execute("newSession", desiredCapabilities);
-        String rawText = response.getResponseText();
 
-        capabilities = new JsonToBeanConverter().convert(DesiredCapabilities.class, rawText);
-        sessionId = response.getSessionId();
+//        capabilities = new JsonToBeanConverter().convert(DesiredCapabilities.class, rawText);
+        sessionId = new SessionId(response.getSessionId());
     }
 
     public Capabilities getCapabilities() {
@@ -35,17 +35,17 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 
     public String getTitle() {
         Response response = execute("getTitle");
-        return response.getResponseText();
+        return response.getValue().toString();
     }
 
     public String getCurrentUrl() {
-        return execute("currentUrl").getResponseText();
+        return execute("currentUrl").getValue().toString();
     }
 
 
     public boolean getVisible() {
         Response response = execute("getVisible");
-        return Boolean.valueOf(response.getResponseText());
+        return (Boolean) response.getValue();
     }
 
     public void setVisible(boolean visible) {
@@ -73,7 +73,6 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 
     public WebElement findElementByLinkText(String using) {
         Response response = execute("findElement", "link text", using);
-        System.out.println("response = " + response);
         return getElementFrom(response);
     }
 
@@ -83,7 +82,6 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 
     public WebElement findElementByName(String using) {
         Response response = execute("findElement", "name", using);
-        System.out.println("response = " + response);
         return getElementFrom(response);
     }
 
@@ -93,7 +91,6 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 
     public WebElement findElementByXPath(String using) {
         Response response = execute("findElement", "xpath", using);
-        System.out.println("response = " + response);
         return getElementFrom(response);
     }
 
@@ -126,8 +123,10 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 
     private WebElement getElementFrom(Response response) {
         try {
-            RemoteWebElement toReturn = new JsonToBeanConverter().convert(RemoteWebElement.class, response.getResponseText());
+            Map rawResponse = (Map) response.getValue();
+            RemoteWebElement toReturn = new RemoteWebElement();
             toReturn.setParent(this);
+            toReturn.setId(String.valueOf(rawResponse.get("id")));
             return toReturn;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -137,7 +136,8 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     protected Response execute(String commandName, Object... parameters) {
         Command command = new Command(sessionId, new Context("foo"), commandName, parameters);
         try {
-            return executor.execute(command);
+            Response response = executor.execute(command);
+            return response;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -7,7 +7,6 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.io.IOException;
 
 public class HttpCommandExecutor implements CommandExecutor {
     private final static boolean GET = true;
@@ -28,8 +27,14 @@ public class HttpCommandExecutor implements CommandExecutor {
         nameToUrl.put("getVisible",   new CommandInfo("/session/:sessionId/:context/visible", GET));
         nameToUrl.put("findElement",  new CommandInfo("/session/:sessionId/:context/element", POST));
 
-        nameToUrl.put("getElementAttribute", new CommandInfo("/session/:sessionId/:context/element/:id/:name", GET));
+        nameToUrl.put("submitElement",       new CommandInfo("/session/:sessionId/:context/element/:id/submit", POST));
+        nameToUrl.put("getElementText",      new CommandInfo("/session/:sessionId/:context/element/:id/text", GET));
+        nameToUrl.put("sendKeys",            new CommandInfo("/session/:sessionId/:context/element/:id/value", POST));
         nameToUrl.put("getElementValue",     new CommandInfo("/session/:sessionId/:context/element/:id/value", GET));
+
+
+        nameToUrl.put("getElementAttribute", new CommandInfo("/session/:sessionId/:context/element/:id/:name", GET));
+
     }
 	
 	public Response execute(Command command) throws Exception {
@@ -43,7 +48,6 @@ public class HttpCommandExecutor implements CommandExecutor {
         if (httpMethod instanceof PostMethod)
             ((PostMethod) httpMethod).setRequestEntity(new StringRequestEntity(payload, "application/json", "UTF-8"));
 
-        System.out.println("httpMethod = " + httpMethod.getURI());
         client.executeMethod(httpMethod);
 
         // TODO: SimonStewart: 2008-04-25: This is really shabby
@@ -60,24 +64,29 @@ public class HttpCommandExecutor implements CommandExecutor {
         return response;
 	}
 
-    private Response createResponse(HttpMethod httpMethod) throws IOException {
-        Response response = new Response();
-        response.setError(httpMethod.getStatusCode() != HttpStatus.SC_OK);
+    private Response createResponse(HttpMethod httpMethod) throws Exception {
+        Response response = null;
 
-        System.out.println("httpMethod.getResponseHeader(\"content-length\").getValue() = " + httpMethod.getResponseHeader("content-length").getValue());
-        
-        response.setText(httpMethod.getResponseBodyAsString());
+        Header header = httpMethod.getResponseHeader("Content-Type");
 
-        String uri = httpMethod.getURI().toString();
-        int sessionIndex = uri.indexOf("/session/");
-        if (sessionIndex != -1) {
-            sessionIndex += "/session/".length();
-            int nextSlash = uri.indexOf("/", sessionIndex);
-            if (nextSlash != -1) {
-                response.setSessionId(uri.substring(sessionIndex, nextSlash));
-                response.setContext("foo");
+        if (header != null && header.getValue().startsWith("application/json")) {
+            response = new JsonToBeanConverter().convert(Response.class, httpMethod.getResponseBodyAsString());
+        } else {
+            response = new Response();
+            response.setValue(httpMethod.getResponseBodyAsString());
+            String uri = httpMethod.getURI().toString();
+            int sessionIndex = uri.indexOf("/session/");
+            if (sessionIndex != -1) {
+                sessionIndex += "/session/".length();
+                int nextSlash = uri.indexOf("/", sessionIndex);
+                if (nextSlash != -1) {
+                    response.setSessionId(uri.substring(sessionIndex, nextSlash));
+                    response.setContext("foo");
+                }
             }
         }
+        response.setError(httpMethod.getStatusCode() != HttpStatus.SC_OK);
+
         return response;
     }
 

@@ -28,12 +28,25 @@ public class JsonToBeanConverter {
             return (T) convertEnum(clazz, text);
         }
 
-        Object o = new JSONParser().parse(new StringReader(String.valueOf(text)));
+        Object o;
+        try {
+            o = new JSONParser().parse(new StringReader(String.valueOf(text)));
+        } catch (Error e) {
+            return (T) text;
+        }
 
         if (Map.class.isAssignableFrom(clazz))
             return (T) convertMap((JSONObject) o);
 
+        if (Object.class.equals(clazz)) {
+            return (T) convertObjectToMap((JSONObject) o);
+        }
+
         return convertBean(clazz, (JSONObject) o);
+    }
+
+    private Map convertObjectToMap(JSONObject jsonObject) {
+        return new HashMap(jsonObject);
     }
 
     private Enum convertEnum(Class clazz, Object text) {
@@ -62,6 +75,9 @@ public class JsonToBeanConverter {
         T t = clazz.newInstance();
         PropertyDescriptor[] allProperties = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
         for (PropertyDescriptor property : allProperties) {
+            if ("class".equals(property.getName()))
+                continue;
+
             Object value = toConvert.get(property.getName());
 
             Method write = property.getWriteMethod();

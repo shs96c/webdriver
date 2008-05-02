@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.is;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.util.List;
 import java.util.Map;
 
 public class JsonToBeanConverterTest extends TestCase {
@@ -87,6 +86,24 @@ public class JsonToBeanConverterTest extends TestCase {
 
         assertTrue(first);
         assertFalse(second);
+    }
+    
+    public void testShouldUseAMapToRepresentComplexObjects() throws Exception {
+        JSONObject toModel = new JSONObject();
+        toModel.put("thing", "hairy");
+        toModel.put("hairy", "true");
+
+        Map modelled = (Map) new JsonToBeanConverter().convert(Object.class, toModel);
+        assertEquals(2, modelled.size());
+    }
+
+    public void testShouldConvertAResponseWithAnElementInIt() throws Exception {
+        // Lifted straight from a debugging session
+        String json = "{\"value\":{\"value\":\"\",\"text\":\"\",\"selected\":false,\"enabled\":true,\"id\":\"three\"},\"context\":{},\"sessionId\":{},\"error\":false}";
+        Response converted = new JsonToBeanConverter().convert(Response.class, json);
+
+        Map value = (Map) converted.getValue();
+        assertEquals("three", value.get("id"));
     }
 
     public static class SimpleBean {

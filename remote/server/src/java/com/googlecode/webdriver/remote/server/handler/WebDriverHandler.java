@@ -3,6 +3,7 @@ package com.googlecode.webdriver.remote.server.handler;
 import com.googlecode.webdriver.WebDriver;
 import com.googlecode.webdriver.remote.Context;
 import com.googlecode.webdriver.remote.SessionId;
+import com.googlecode.webdriver.remote.Response;
 import com.googlecode.webdriver.remote.server.DriverSessions;
 import com.googlecode.webdriver.remote.server.Session;
 import com.googlecode.webdriver.remote.server.KnownElements;
@@ -40,5 +41,9 @@ public abstract class WebDriverHandler implements Handler {
 
     protected KnownElements getKnownElements() {
         return sessions.get(sessionId).getKnownElements();
+    }
+
+    protected Response newResponse() {
+        return new Response(sessionId, context);
     }
 }

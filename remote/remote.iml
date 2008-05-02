@@ -9,14 +9,6 @@
         <webroots>
           <root url="file://$MODULE_DIR$/server/src/web" relative="/" />
         </webroots>
-        <sourceRoots>
-          <root url="file://$MODULE_DIR$/client/src/java" />
-          <root url="file://$MODULE_DIR$/client/test/java" />
-          <root url="file://$MODULE_DIR$/common/src/java" />
-          <root url="file://$MODULE_DIR$/common/test/java" />
-          <root url="file://$MODULE_DIR$/server/src/java" />
-          <root url="file://$MODULE_DIR$/server/test/java" />
-        </sourceRoots>
         <building>
           <setting name="EXPLODED_URL" value="file://" />
           <setting name="EXPLODED_ENABLED" value="false" />

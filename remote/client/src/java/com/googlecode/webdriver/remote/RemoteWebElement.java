@@ -28,24 +28,15 @@ public class RemoteWebElement implements WebElement {
     }
 
     public void submit() {
-        throw new UnsupportedOperationException();
+        parent.execute("submitElement", map("id", id));
     }
 
     public String getValue() {
-        return parent.execute("getElementValue", map("id", id)).getResponseText();
-    }
-
-    private Map map(String... keysToValues) {
-        Map<String, String> toReturn = new HashMap<String, String>();
-        for (int i = 0; i < keysToValues.length; i += 2) {
-            toReturn.put(keysToValues[i], keysToValues[i+1]);
-        }
-
-        return toReturn;
+        return (String) parent.execute("getElementValue", map("id", id)).getValue();
     }
 
     public void sendKeys(CharSequence... keysToSend) {
-        throw new UnsupportedOperationException();
+        parent.execute("sendKeys", map("id", id, "value", keysToSend));
     }
 
     public void clear() {
@@ -53,7 +44,7 @@ public class RemoteWebElement implements WebElement {
     }
 
     public String getAttribute(String name) {
-        return parent.execute("getElementAttribute", map("id", id, "name", name)).getResponseText();
+        return (String) parent.execute("getElementAttribute", map("id", id, "name", name)).getValue();
     }
 
     public boolean toggle() {
@@ -73,10 +64,19 @@ public class RemoteWebElement implements WebElement {
     }
 
     public String getText() {
-        return parent.execute("getElementText", map("id", id)).getResponseText();
+        return (String) parent.execute("getElementText", map("id", id)).getValue();
     }
 
     public List<WebElement> getChildrenOfType(String tagName) {
         throw new UnsupportedOperationException();
+    }
+
+    protected Map map(Object... keysToValues) {
+        Map<Object, Object> toReturn = new HashMap<Object, Object>();
+        for (int i = 0; i < keysToValues.length; i += 2) {
+            toReturn.put(keysToValues[i], keysToValues[i+1]);
+        }
+
+        return toReturn;
     }
 }
