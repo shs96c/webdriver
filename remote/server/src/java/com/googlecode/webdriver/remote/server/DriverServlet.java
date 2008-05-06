@@ -53,6 +53,11 @@ public class DriverServlet extends HttpServlet {
         postMapper.bind("/session/:sessionId/:context/element/:id/value", SendKeys.class).on(ResultType.SUCCESS, new EmptyResult());
         getMapper.bind("/session/:sessionId/:context/element/:id/value", GetElementValue.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
+        postMapper.bind("/session/:sessionId/:context/element/:id/clear", ClearElement.class).on(ResultType.SUCCESS, new EmptyResult());
+        getMapper.bind("/session/:sessionId/:context/element/:id/selected", GetElementSelected.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+        postMapper.bind("/session/:sessionId/:context/element/:id/selected", SetElementSelected.class).on(ResultType.SUCCESS, new EmptyResult());
+        postMapper.bind("/session/:sessionId/:context/element/:id/toggle", ToggleElement.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+
         getMapper.bind("/session/:sessionId/:context/element/:id/:name", GetElementAttribute.class).on(ResultType.SUCCESS, new JsonResult(":response"));
     }
 	

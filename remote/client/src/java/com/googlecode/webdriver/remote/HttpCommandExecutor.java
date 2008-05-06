@@ -29,10 +29,14 @@ public class HttpCommandExecutor implements CommandExecutor {
         nameToUrl.put("findElement",  new CommandInfo("/session/:sessionId/:context/element", POST));
 
         nameToUrl.put("clickElement",        new CommandInfo("/session/:sessionId/:context/element/:id/click", POST));
+        nameToUrl.put("clearElement",        new CommandInfo("/session/:sessionId/:context/element/:id/clear", POST));
         nameToUrl.put("submitElement",       new CommandInfo("/session/:sessionId/:context/element/:id/submit", POST));
         nameToUrl.put("getElementText",      new CommandInfo("/session/:sessionId/:context/element/:id/text", GET));
         nameToUrl.put("sendKeys",            new CommandInfo("/session/:sessionId/:context/element/:id/value", POST));
         nameToUrl.put("getElementValue",     new CommandInfo("/session/:sessionId/:context/element/:id/value", GET));
+        nameToUrl.put("isElementSelected",   new CommandInfo("/session/:sessionId/:context/element/:id/selected", GET));
+        nameToUrl.put("setElementSelected",  new CommandInfo("/session/:sessionId/:context/element/:id/selected", POST));
+        nameToUrl.put("toggleElement",       new CommandInfo("/session/:sessionId/:context/element/:id/toggle", POST));
 
         nameToUrl.put("getElementAttribute", new CommandInfo("/session/:sessionId/:context/element/:id/:name", GET));
     }
@@ -65,11 +69,12 @@ public class HttpCommandExecutor implements CommandExecutor {
 	}
 
     private Response createResponse(HttpMethod httpMethod) throws Exception {
-        Response response = null;
+        Response response;
 
         Header header = httpMethod.getResponseHeader("Content-Type");
 
         if (header != null && header.getValue().startsWith("application/json")) {
+            System.out.println("http = " + httpMethod.getResponseBodyAsString());
             response = new JsonToBeanConverter().convert(Response.class, httpMethod.getResponseBodyAsString());
         } else {
             response = new Response();

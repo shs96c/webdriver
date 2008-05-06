@@ -40,7 +40,7 @@ public class RemoteWebElement implements WebElement {
     }
 
     public void clear() {
-        throw new UnsupportedOperationException();
+        parent.execute("clearElement", map("id", id));
     }
 
     public String getAttribute(String name) {
@@ -48,15 +48,15 @@ public class RemoteWebElement implements WebElement {
     }
 
     public boolean toggle() {
-        throw new UnsupportedOperationException();
+        return (Boolean) parent.execute("toggleElement", map("id", id)).getValue();
     }
 
     public boolean isSelected() {
-        throw new UnsupportedOperationException();
+        return (Boolean) parent.execute("isElementSelected", map("id", id)).getValue();
     }
 
     public void setSelected() {
-        throw new UnsupportedOperationException();
+        parent.execute("setElementSelected", map("id", id));
     }
 
     public boolean isEnabled() {
