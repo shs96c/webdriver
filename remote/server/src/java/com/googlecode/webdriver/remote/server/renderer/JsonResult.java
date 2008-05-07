@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class JsonResult implements Renderer {
-    private String propertyName;
+    protected String propertyName;
 
     public JsonResult(String propertyName) {
         if (propertyName.startsWith(":"))
@@ -17,7 +17,7 @@ public class JsonResult implements Renderer {
             this.propertyName = propertyName;
     }
 
-	public void render(HttpServletRequest request, HttpServletResponse response, Handler handler) throws Exception {
+    public void render(HttpServletRequest request, HttpServletResponse response, Handler handler) throws Exception {
         Object result = request.getAttribute(propertyName);
 
         String json = new BeanToJsonConverter().convert(result);

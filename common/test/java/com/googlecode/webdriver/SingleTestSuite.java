@@ -18,9 +18,9 @@ public class SingleTestSuite {
               .usingDriver(driver)
               .keepDriverInstance()
               .includeJavascriptTests()
-              .onlyRun("TextHandlingTest")
-              .method("testShouldReturnEmptyStringWhenTextIsOnlySpaces")
-    //                    .leaveRunningAfterTest();
+              .onlyRun("FormHandlingTest")
+              .method("testShouldNotBeAbleToSelectSomethingThatIsDisabled")
+//                        .leaveRunningAfterTest();
             ;  // Yeah, this look strange :)
 
         if (REMOTE.equals(driver)) {

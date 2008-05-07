@@ -1,14 +1,19 @@
+// Copyright 2008 Google Inc.  All Rights Reserved.
+
 package com.googlecode.webdriver.remote.server.handler;
 
 import com.googlecode.webdriver.remote.Response;
 import com.googlecode.webdriver.remote.server.DriverSessions;
 import com.googlecode.webdriver.remote.server.rest.ResultType;
 
-public class GetElementSelected extends WebDriverHandler {
+/**
+ * @author simonstewart@google.com (Simon Stewart)
+ */
+public class GetElementEnabled extends WebDriverHandler {
     private String elementId;
     private Response response;
 
-    public GetElementSelected(DriverSessions sessions) {
+    public GetElementEnabled(DriverSessions sessions) {
         super(sessions);
     }
 
@@ -18,7 +23,7 @@ public class GetElementSelected extends WebDriverHandler {
 
     public ResultType handle() throws Exception {
         response = newResponse();
-        response.setValue(getKnownElements().get(elementId).isSelected());
+        response.setValue(getKnownElements().get(elementId).isEnabled());
 
         return ResultType.SUCCESS;
     }

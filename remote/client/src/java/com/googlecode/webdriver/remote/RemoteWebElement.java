@@ -44,23 +44,26 @@ public class RemoteWebElement implements WebElement {
     }
 
     public String getAttribute(String name) {
-        return (String) parent.execute("getElementAttribute", map("id", id, "name", name)).getValue();
+        Object value = parent.execute("getElementAttribute", map("id", id, "name", name)).getValue();
+        if (value == null)
+            return null;
+        return String.valueOf(value);
     }
 
     public boolean toggle() {
-        return (Boolean) parent.execute("toggleElement", map("id", id)).getValue();
+        return (Boolean) parent.execute(UnsupportedOperationException.class, "toggleElement", map("id", id)).getValue();
     }
 
     public boolean isSelected() {
-        return (Boolean) parent.execute("isElementSelected", map("id", id)).getValue();
+      return (Boolean) parent.execute("isElementSelected", map("id", id)).getValue();
     }
 
     public void setSelected() {
-        parent.execute("setElementSelected", map("id", id));
+        parent.execute(UnsupportedOperationException.class, "setElementSelected", map("id", id));
     }
 
     public boolean isEnabled() {
-        throw new UnsupportedOperationException();
+        return (Boolean) parent.execute("isElementEnabled", map("id", id)).getValue();
     }
 
     public String getText() {

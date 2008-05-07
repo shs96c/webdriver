@@ -65,7 +65,7 @@ public class ResultConfig {
 		return true;
 	}
 
-	public Handler populate(Handler handler, String pathString) {
+	protected Handler populate(Handler handler, String pathString) {
 		String[] strings = pathString.split("/");
 
 		for (int i = 0; i < sections.length; i++) {
@@ -105,9 +105,16 @@ public class ResultConfig {
         }
 
         request.setAttribute("handler", handler);
-		ResultType result = handler.handle();
 
-        addHandlerAttributesToRequest(request, handler);
+        ResultType result;
+
+        try {
+            result = handler.handle();
+            addHandlerAttributesToRequest(request, handler);
+        } catch (Exception e) {
+            result = ResultType.EXCEPTION;
+            request.setAttribute("exception", e);
+        }
 
         Set<Result> results = resultToRender.get(result);
 		Result toUse = null;
@@ -118,7 +125,7 @@ public class ResultConfig {
 		toUse.getRenderer().render(request, response, handler);
 	}
 
-	private void addHandlerAttributesToRequest(HttpServletRequest request, Handler handler) throws Exception {
+	protected void addHandlerAttributesToRequest(HttpServletRequest request, Handler handler) throws Exception {
 		BeanInfo info = Introspector.getBeanInfo(handler.getClass());
 		PropertyDescriptor[] properties = info.getPropertyDescriptors();
 		for (PropertyDescriptor property : properties) {

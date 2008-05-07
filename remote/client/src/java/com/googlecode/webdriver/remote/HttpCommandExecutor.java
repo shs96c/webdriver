@@ -37,6 +37,7 @@ public class HttpCommandExecutor implements CommandExecutor {
         nameToUrl.put("isElementSelected",   new CommandInfo("/session/:sessionId/:context/element/:id/selected", GET));
         nameToUrl.put("setElementSelected",  new CommandInfo("/session/:sessionId/:context/element/:id/selected", POST));
         nameToUrl.put("toggleElement",       new CommandInfo("/session/:sessionId/:context/element/:id/toggle", POST));
+        nameToUrl.put("isElementEnabled",   new CommandInfo("/session/:sessionId/:context/element/:id/enabled", GET));
 
         nameToUrl.put("getElementAttribute", new CommandInfo("/session/:sessionId/:context/element/:id/:name", GET));
     }
@@ -74,7 +75,6 @@ public class HttpCommandExecutor implements CommandExecutor {
         Header header = httpMethod.getResponseHeader("Content-Type");
 
         if (header != null && header.getValue().startsWith("application/json")) {
-            System.out.println("http = " + httpMethod.getResponseBodyAsString());
             response = new JsonToBeanConverter().convert(Response.class, httpMethod.getResponseBodyAsString());
         } else {
             response = new Response();

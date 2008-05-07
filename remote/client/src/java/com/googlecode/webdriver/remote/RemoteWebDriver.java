@@ -3,6 +3,7 @@ package com.googlecode.webdriver.remote;
 import com.googlecode.webdriver.WebDriver;
 import com.googlecode.webdriver.WebElement;
 import com.googlecode.webdriver.By;
+import com.googlecode.webdriver.NoSuchElementException;
 import com.googlecode.webdriver.internal.FindsById;
 import com.googlecode.webdriver.internal.FindsByLinkText;
 import com.googlecode.webdriver.internal.FindsByName;
@@ -10,6 +11,7 @@ import com.googlecode.webdriver.internal.FindsByXPath;
 
 import java.util.List;
 import java.util.Map;
+import java.lang.reflect.Constructor;
 
 public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, FindsByName, FindsByXPath {
 	private CommandExecutor executor;
@@ -62,7 +64,7 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 
 
     public WebElement findElementById(String using) {
-        Response response = execute("findElement", "id", using);
+        Response response = execute(NoSuchElementException.class, "findElement", "id", using);
         return getElementFrom(response);
     }
 
@@ -72,7 +74,7 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 
 
     public WebElement findElementByLinkText(String using) {
-        Response response = execute("findElement", "link text", using);
+        Response response = execute(NoSuchElementException.class, "findElement", "link text", using);
         return getElementFrom(response);
     }
 
@@ -81,7 +83,7 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     public WebElement findElementByName(String using) {
-        Response response = execute("findElement", "name", using);
+        Response response = execute(NoSuchElementException.class, "findElement", "name", using);
         return getElementFrom(response);
     }
 
@@ -90,13 +92,14 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     public WebElement findElementByXPath(String using) {
-        Response response = execute("findElement", "xpath", using);
+        Response response = execute(NoSuchElementException.class, "findElement", "xpath", using);
         return getElementFrom(response);
     }
 
     public List<WebElement> findElementsByXPath(String using) {
         throw new UnsupportedOperationException();
     }// Misc
+
     public String getPageSource() {
         return (String) execute("pageSource").getValue();
     }
@@ -134,12 +137,50 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     protected Response execute(String commandName, Object... parameters) {
+        return execute(RuntimeException.class, commandName, parameters);
+    }
+
+    protected Response execute(Class<? extends RuntimeException> throwOnFailure, String commandName, Object... parameters) {
         Command command = new Command(sessionId, new Context("foo"), commandName, parameters);
+
+        Response response = new Response();
+
         try {
-            Response response = executor.execute(command);
-            return response;
+            response = executor.execute(command);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            response.setError(true);
+            response.setValue(e.getStackTrace());
         }
+
+        if (response.isError()) {
+            RuntimeException toThrow;
+            try {
+                Constructor<? extends RuntimeException> constructor = throwOnFailure.getConstructor(String.class);
+                toThrow = constructor.newInstance("Place holder");
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("Place holder in backup exception");
+            }
+
+            List elements = (List) response.getValue();
+            StackTraceElement[] trace = new StackTraceElement[elements.size()];
+
+            for (int i = 0; i < elements.size(); i++) {
+              Map values = (Map) elements.get(i);
+
+              // I'm so sorry.
+              long lineNumber = (Long) values.get("lineNumber");
+
+              trace[i] = new StackTraceElement((String) values.get("className"),
+                                               (String) values.get("methodName"),
+                                               (String) values.get("fileName"),
+                                               (int) lineNumber);
+            }
+
+            toThrow.setStackTrace(trace);
+            throw toThrow;
+        }
+
+        return response;
     }
 }

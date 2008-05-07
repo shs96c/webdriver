@@ -4,15 +4,19 @@ import com.googlecode.webdriver.remote.server.JsonParametersAware;
 import com.googlecode.webdriver.remote.server.DriverSessions;
 import com.googlecode.webdriver.remote.server.rest.ResultType;
 import com.googlecode.webdriver.remote.JsonToBeanConverter;
+import com.googlecode.webdriver.remote.Response;
 import com.googlecode.webdriver.By;
 import com.googlecode.webdriver.WebElement;
+import com.googlecode.webdriver.NoSuchElementException;
+
 import org.json.simple.JSONArray;
 
 public class FindElement extends WebDriverHandler implements JsonParametersAware {
     private By by;
     private String elementId;
+  private Response response;
 
-    public FindElement(DriverSessions sessions) {
+  public FindElement(DriverSessions sessions) {
         super(sessions);
     }
 
@@ -35,14 +39,26 @@ public class FindElement extends WebDriverHandler implements JsonParametersAware
     }
 
     public ResultType handle() throws Exception {
-        WebElement element = getDriver().findElement(by);
+        try {
+            WebElement element = getDriver().findElement(by);
+            elementId = getKnownElements().add(element);
 
-        elementId = getKnownElements().add(element);
+            return ResultType.SUCCESS;
+        } catch (NoSuchElementException e) {
+          response = newResponse();
+          response.setError(true);
 
-        return ResultType.SUCCESS;
+          response.setValue(e.getStackTrace());
+
+          return ResultType.ERROR;
+        }
     }
 
     public String getElement() {
         return elementId;
+    }
+
+    public Response getResponse() {
+        return response;
     }
 }

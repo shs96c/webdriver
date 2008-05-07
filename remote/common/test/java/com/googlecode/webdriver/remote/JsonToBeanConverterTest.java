@@ -8,6 +8,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.Map;
+import java.util.List;
 
 public class JsonToBeanConverterTest extends TestCase {
     public void testCanConstructASimpleString() throws Exception {
@@ -109,6 +110,22 @@ public class JsonToBeanConverterTest extends TestCase {
         Object o = new JsonToBeanConverter().convert(Object.class, "");
 
         assertTrue(o instanceof String);
+    }
+
+    public void testCanHandleValueBeingAnArray() throws Exception {
+      String[] value = {"Cheese", "Peas"};
+
+      Response response = new Response();
+      response.setContext("foo");
+      response.setSessionId("bar");
+      response.setValue(value);
+      response.setError(true);
+
+      String json = new BeanToJsonConverter().convert(response);
+      Response converted = new JsonToBeanConverter().convert(Response.class, json);
+
+      assertEquals(2, ((List) converted.getValue()).size());
+      assertTrue(converted.isError());
     }
 
     public static class SimpleBean {

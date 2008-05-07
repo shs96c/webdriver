@@ -5,6 +5,8 @@ import com.googlecode.webdriver.remote.server.renderer.EmptyResult;
 import com.googlecode.webdriver.remote.server.renderer.ForwardResult;
 import com.googlecode.webdriver.remote.server.renderer.JsonResult;
 import com.googlecode.webdriver.remote.server.renderer.RedirectResult;
+import com.googlecode.webdriver.remote.server.renderer.ErrorJsonResult;
+import com.googlecode.webdriver.remote.server.renderer.JsonErrorExceptionResult;
 import com.googlecode.webdriver.remote.server.rest.ResultConfig;
 import com.googlecode.webdriver.remote.server.rest.ResultType;
 import com.googlecode.webdriver.remote.server.rest.UrlMapper;
@@ -27,8 +29,11 @@ public class DriverServlet extends HttpServlet {
 
         getMapper = new UrlMapper(driverSessions);
 		postMapper = new UrlMapper(driverSessions);
-		
-		postMapper.bind("/session", NewSession.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context"));
+
+        getMapper.addGlobalHandler(ResultType.EXCEPTION, new JsonErrorExceptionResult(":exception", ":response"));
+        postMapper.addGlobalHandler(ResultType.EXCEPTION, new JsonErrorExceptionResult(":exception", ":response"));
+
+        postMapper.bind("/session", NewSession.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context"));
 		getMapper.bind("/session/:sessionId/:context", GetSessionCapabilities.class)
 			.on(ResultType.SUCCESS, new ForwardResult("/WEB-INF/views/sessionCapabilities.jsp"))
 			.on(ResultType.SUCCESS, new JsonResult(":response"), "application/json");
@@ -43,7 +48,9 @@ public class DriverServlet extends HttpServlet {
         postMapper.bind("/session/:sessionId/:context/visible", SetVisible.class).on(ResultType.SUCCESS, new EmptyResult());
         getMapper.bind("/session/:sessionId/:context/visible", GetVisible.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
-        postMapper.bind("/session/:sessionId/:context/element", FindElement.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context/element/:element"));
+        postMapper.bind("/session/:sessionId/:context/element", FindElement.class)
+            .on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context/element/:element"))
+            .on(ResultType.ERROR, new ErrorJsonResult(":response"));
         getMapper.bind("/session/:sessionId/:context/element/:elementId", DescribeElement.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
         postMapper.bind("/session/:sessionId/:context/element/:id/click", ClickElement.class).on(ResultType.SUCCESS, new EmptyResult());
@@ -57,6 +64,7 @@ public class DriverServlet extends HttpServlet {
         getMapper.bind("/session/:sessionId/:context/element/:id/selected", GetElementSelected.class).on(ResultType.SUCCESS, new JsonResult(":response"));
         postMapper.bind("/session/:sessionId/:context/element/:id/selected", SetElementSelected.class).on(ResultType.SUCCESS, new EmptyResult());
         postMapper.bind("/session/:sessionId/:context/element/:id/toggle", ToggleElement.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+        getMapper.bind("/session/:sessionId/:context/element/:id/enabled", GetElementEnabled.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
         getMapper.bind("/session/:sessionId/:context/element/:id/:name", GetElementAttribute.class).on(ResultType.SUCCESS, new JsonResult(":response"));
     }

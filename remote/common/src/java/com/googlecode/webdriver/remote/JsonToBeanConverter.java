@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
 
 public class JsonToBeanConverter {
     public <T> T convert(Class<T> clazz, Object text) throws Exception {
@@ -39,16 +40,23 @@ public class JsonToBeanConverter {
         }
 
         if (Map.class.isAssignableFrom(clazz))
-            return (T) convertMap((JSONObject) o);
+            return (T) convertMap((Map) o);
+
+        if (List.class.isAssignableFrom(o.getClass()))
+            return (T) convertList((List) o);
+
+        if (isPrimitive(o.getClass())) {
+            return (T) o;
+        }
 
         if (Object.class.equals(clazz)) {
-            return (T) convertObjectToMap((JSONObject) o);
+            return (T) convertObjectToMap((Map) o);
         }
 
         return convertBean(clazz, (JSONObject) o);
     }
 
-    private Map convertObjectToMap(JSONObject jsonObject) {
+  private Map convertObjectToMap(Map jsonObject) {
         return new HashMap(jsonObject);
     }
 
@@ -101,7 +109,7 @@ public class JsonToBeanConverter {
         return t;
     }
 
-    private Map convertMap(JSONObject toConvert) throws Exception {
+    private Map convertMap(Map toConvert) throws Exception {
         Map map = new HashMap();
 
         Iterator allEntries = toConvert.entrySet().iterator();
@@ -112,6 +120,11 @@ public class JsonToBeanConverter {
 
         return map;
     }
+
+    private List convertList(List list) {
+        return list;
+    }
+
 
     private boolean isPrimitive(Class<?> clazz) {
         if (clazz.isPrimitive())
