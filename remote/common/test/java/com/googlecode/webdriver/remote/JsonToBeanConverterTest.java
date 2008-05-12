@@ -112,6 +112,26 @@ public class JsonToBeanConverterTest extends TestCase {
         assertTrue(o instanceof String);
     }
 
+    public void testShouldBeAbleToCopeWithStringsThatLookLikeBooleans() throws Exception {
+        String json = "{\"value\":\"false\",\"context\":\"foo\",\"sessionId\":\"1210083863107\",\"error\":false}";
+
+        try {
+            new JsonToBeanConverter().convert(Response.class, json);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("This should have worked");
+        }
+    }
+
+    public void testShouldBeAbleToSetAnObjectToABoolean() throws Exception {
+        String json = "{\"value\":true,\"context\":\"foo\",\"sessionId\":\"1210084658750\",\"error\":false}";
+
+        Response response = new JsonToBeanConverter().convert(Response.class, json);
+
+        assertThat((Boolean) response.getValue(), is(true));
+    }
+
+
     public void testCanHandleValueBeingAnArray() throws Exception {
       String[] value = {"Cheese", "Peas"};
 
@@ -127,6 +147,7 @@ public class JsonToBeanConverterTest extends TestCase {
       assertEquals(2, ((List) converted.getValue()).size());
       assertTrue(converted.isError());
     }
+
 
     public static class SimpleBean {
         private String value;

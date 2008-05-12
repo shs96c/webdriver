@@ -25,12 +25,19 @@ public class JsonToBeanConverter {
             return (T) text; 
         }
 
+        if (isPrimitive(text.getClass())) {
+            return (T) text;
+        }
+
         if (isEnum(clazz, text)) {
             return (T) convertEnum(clazz, text);
         }
 
         if ("".equals(String.valueOf(text)))
             return (T) text;
+
+        if (text != null && text instanceof String && !((String) text).startsWith("{") && Object.class.equals(clazz))
+            return (T) text;        
 
         Object o;
         try {
@@ -132,7 +139,6 @@ public class JsonToBeanConverter {
 
         if (Boolean.class.isAssignableFrom(clazz))
             return true;
-
 
         if (Byte.class.isAssignableFrom(clazz))
             return true;
