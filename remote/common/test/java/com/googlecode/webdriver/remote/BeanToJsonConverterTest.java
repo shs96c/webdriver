@@ -93,7 +93,8 @@ public class BeanToJsonConverterTest extends TestCase {
     }
 
     private static class BeanWithCollection {
-        public Set getSomething() {
+        @SuppressWarnings("unchecked")
+		public Set getSomething() {
             Set<Integer> integers = new HashSet<Integer>();
             integers.add(1);
             integers.add(43);
@@ -102,7 +103,8 @@ public class BeanToJsonConverterTest extends TestCase {
     }
 
     private static class BeanWithNullCollection {
-        public List getList() {
+        @SuppressWarnings("unchecked")
+		public List getList() {
             return null;
         }
     }

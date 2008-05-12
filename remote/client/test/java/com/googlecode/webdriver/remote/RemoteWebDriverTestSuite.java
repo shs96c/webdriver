@@ -1,21 +1,21 @@
 package com.googlecode.webdriver.remote;
 
-import com.googlecode.webdriver.TestSuiteBuilder;
-import com.googlecode.webdriver.EnvironmentStarter;
-import com.googlecode.webdriver.remote.server.DriverServlet;
-import com.googlecode.webdriver.environment.webserver.AppServer;
-import com.googlecode.webdriver.environment.webserver.Jetty6AppServer;
+import java.io.File;
+
+import junit.extensions.TestSetup;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import junit.extensions.TestSetup;
 
-import java.io.File;
+import com.googlecode.webdriver.TestSuiteBuilder;
+import com.googlecode.webdriver.environment.webserver.AppServer;
+import com.googlecode.webdriver.environment.webserver.Jetty6AppServer;
+import com.googlecode.webdriver.remote.server.DriverServlet;
 
 public class RemoteWebDriverTestSuite {
     public static Test suite() throws Exception {
         Test rawSuite =
             new TestSuiteBuilder()
-                    .addSourceDir("common")
+                    .addSourceDir("../common")
 //                    .addSourceDir("remote/client")
                     .usingDriver(RemoteWebDriverForTest.class)
                     .exclude("remote")
@@ -45,7 +45,9 @@ public class RemoteWebDriverTestSuite {
             appServer = new Jetty6AppServer() {
                 protected File findRootOfWebApp() {
                     File common = super.findRootOfWebApp();
-                    return new File(common, "../../../remote/server/src/web");
+                    File file = new File(common, "../../../remote/server/src/web");
+                    System.out.println(String.format("file exists %s and is: %s", file.exists(), file.getAbsolutePath()));
+					return file;
                 }
             };
             appServer.listenOn(7055);

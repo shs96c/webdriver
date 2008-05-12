@@ -25,7 +25,7 @@ public class TestSuiteBuilder {
 	private boolean withEnvironment = true;
 	private String onlyRun;
 	private String testMethodName;
-    private Set<String> decorators = new LinkedHashSet();
+    private Set<String> decorators = new LinkedHashSet<String>();
 
     public TestSuiteBuilder() {
 		String[] possiblePaths = { "common", "../common", };

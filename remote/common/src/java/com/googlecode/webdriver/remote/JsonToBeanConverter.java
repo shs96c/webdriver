@@ -13,7 +13,8 @@ import java.util.Map;
 import java.util.List;
 
 public class JsonToBeanConverter {
-    public <T> T convert(Class<T> clazz, Object text) throws Exception {
+    @SuppressWarnings("unchecked")
+	public <T> T convert(Class<T> clazz, Object text) throws Exception {
         if (text == null)
             return null;
 
@@ -63,11 +64,13 @@ public class JsonToBeanConverter {
         return convertBean(clazz, (JSONObject) o);
     }
 
-  private Map convertObjectToMap(Map jsonObject) {
+  @SuppressWarnings("unchecked")
+private Map convertObjectToMap(Map jsonObject) {
         return new HashMap(jsonObject);
     }
 
-    private Enum convertEnum(Class clazz, Object text) {
+    @SuppressWarnings("unchecked")
+	private Enum convertEnum(Class clazz, Object text) {
         if (clazz.isEnum())
             return Enum.valueOf(clazz, String.valueOf(text));
 
@@ -116,7 +119,8 @@ public class JsonToBeanConverter {
         return t;
     }
 
-    private Map convertMap(Map toConvert) throws Exception {
+    @SuppressWarnings("unchecked")
+	private Map convertMap(Map toConvert) throws Exception {
         Map map = new HashMap();
 
         Iterator allEntries = toConvert.entrySet().iterator();
@@ -128,7 +132,8 @@ public class JsonToBeanConverter {
         return map;
     }
 
-    private List convertList(List list) {
+    @SuppressWarnings("unchecked")
+	private List convertList(List list) {
         return list;
     }
 

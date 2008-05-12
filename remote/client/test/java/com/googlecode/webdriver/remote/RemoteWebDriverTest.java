@@ -1,13 +1,12 @@
 package com.googlecode.webdriver.remote;
 
+import java.io.File;
+
+import junit.framework.TestCase;
+
 import com.googlecode.webdriver.environment.webserver.AppServer;
 import com.googlecode.webdriver.environment.webserver.Jetty6AppServer;
 import com.googlecode.webdriver.remote.server.DriverServlet;
-import com.googlecode.webdriver.WebElement;
-import com.googlecode.webdriver.By;
-import junit.framework.TestCase;
-
-import java.io.File;
 
 public class RemoteWebDriverTest extends TestCase {
 	public void testShouldBeAbleToCreateANewSession() throws Exception {

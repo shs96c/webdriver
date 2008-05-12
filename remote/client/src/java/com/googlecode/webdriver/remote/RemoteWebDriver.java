@@ -124,9 +124,10 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
         throw new UnsupportedOperationException();
     }
 
-    private WebElement getElementFrom(Response response) {
+    @SuppressWarnings("unchecked")
+	private WebElement getElementFrom(Response response) {
         try {
-            Map rawResponse = (Map) response.getValue();
+            Map<Object, Object> rawResponse = (Map<Object, Object>) response.getValue();
             RemoteWebElement toReturn = new RemoteWebElement();
             toReturn.setParent(this);
             toReturn.setId(String.valueOf(rawResponse.get("id")));
@@ -140,7 +141,8 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
         return execute(RuntimeException.class, commandName, parameters);
     }
 
-    protected Response execute(Class<? extends RuntimeException> throwOnFailure, String commandName, Object... parameters) {
+    @SuppressWarnings("unchecked")
+	protected Response execute(Class<? extends RuntimeException> throwOnFailure, String commandName, Object... parameters) {
         Command command = new Command(sessionId, new Context("foo"), commandName, parameters);
 
         Response response = new Response();

@@ -75,7 +75,7 @@ public class RemoteWebElement implements WebElement {
         throw new UnsupportedOperationException();
     }
 
-    protected Map map(Object... keysToValues) {
+	protected Map<Object, Object> map(Object... keysToValues) {
         Map<Object, Object> toReturn = new HashMap<Object, Object>();
         for (int i = 0; i < keysToValues.length; i += 2) {
             toReturn.put(keysToValues[i], keysToValues[i+1]);

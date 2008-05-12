@@ -131,7 +131,8 @@ public class HttpCommandExecutor implements CommandExecutor {
             return get;
         }
 
-        private String get(String propertyName, Command command) {
+        @SuppressWarnings("unchecked")
+		private String get(String propertyName, Command command) {
             if ("sessionId".equals(propertyName))
                 return command.getSessionId().toString();
             if ("context".equals(propertyName))

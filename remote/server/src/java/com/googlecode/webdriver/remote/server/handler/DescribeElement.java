@@ -1,9 +1,8 @@
 package com.googlecode.webdriver.remote.server.handler;
 
-import com.googlecode.webdriver.remote.server.rest.ResultType;
-import com.googlecode.webdriver.remote.server.DriverSessions;
 import com.googlecode.webdriver.remote.Response;
-import com.googlecode.webdriver.WebElement;
+import com.googlecode.webdriver.remote.server.DriverSessions;
+import com.googlecode.webdriver.remote.server.rest.ResultType;
 
 public class DescribeElement extends WebDriverHandler {
     private String elementId;

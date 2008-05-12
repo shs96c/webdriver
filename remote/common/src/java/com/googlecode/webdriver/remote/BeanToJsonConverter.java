@@ -1,10 +1,5 @@
 package com.googlecode.webdriver.remote;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-import org.json.simple.parser.JSONParser;
-
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -13,13 +8,17 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 public class BeanToJsonConverter {
     public String convert(Object toConvert) throws Exception {
         Object returned = realConvert(toConvert);
         return returned == null ? null : returned.toString();
     }
 
-    private Object realConvert(Object toConvert) throws Exception {
+    @SuppressWarnings("unchecked")
+	private Object realConvert(Object toConvert) throws Exception {
         if (toConvert == null)
             return null;
 
@@ -81,7 +80,8 @@ public class BeanToJsonConverter {
         return false;
     }
 
-    private Object convertCollection(Collection collection) throws Exception {
+    @SuppressWarnings("unchecked")
+	private Object convertCollection(Collection collection) throws Exception {
         JSONArray json = new JSONArray();
 
         if (collection == null)
@@ -94,7 +94,8 @@ public class BeanToJsonConverter {
         return json;
     }
 
-    private Object convertArray(Object array) throws Exception {
+    @SuppressWarnings("unchecked")
+	private Object convertArray(Object array) throws Exception {
         JSONArray json = new JSONArray();
 
         int length = Array.getLength(array);
@@ -105,7 +106,8 @@ public class BeanToJsonConverter {
         return json;
     }
 
-    private Object convertBean(Object toConvert) throws Exception {
+    @SuppressWarnings("unchecked")
+	private Object convertBean(Object toConvert) throws Exception {
         JSONObject json = new JSONObject();
 
         BeanInfo beanInfo = Introspector.getBeanInfo(toConvert.getClass());
@@ -129,7 +131,8 @@ public class BeanToJsonConverter {
         return json;
     }
 
-    private Object convertMap(Map map) throws Exception {
+    @SuppressWarnings("unchecked")
+	private Object convertMap(Map map) throws Exception {
         JSONObject json = new JSONObject();
         for (Object rawEntry : map.entrySet()) {
             Map.Entry entry = (Map.Entry) rawEntry;

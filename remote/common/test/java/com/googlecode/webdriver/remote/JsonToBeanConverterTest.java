@@ -17,7 +17,8 @@ public class JsonToBeanConverterTest extends TestCase {
         assertThat(text, is("cheese"));
     }
 
-    public void testCanPopulateAMap() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void testCanPopulateAMap() throws Exception {
         JSONObject toConvert = new JSONObject();
         toConvert.put("cheese", "brie");
         toConvert.put("foodstuff", "cheese");
@@ -26,7 +27,8 @@ public class JsonToBeanConverterTest extends TestCase {
         assertThat(map.size(), is(2));
     }
 
-    public void testCanPopulateASimpleBean() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void testCanPopulateASimpleBean() throws Exception {
         JSONObject toConvert = new JSONObject();
         toConvert.put("value", "time");
 
@@ -35,7 +37,8 @@ public class JsonToBeanConverterTest extends TestCase {
         assertThat(bean.getValue(), is("time"));
     }
     
-    public void testWillSilentlyDiscardUnusedFieldsWhenPopulatingABean() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void testWillSilentlyDiscardUnusedFieldsWhenPopulatingABean() throws Exception {
         JSONObject toConvert = new JSONObject();
         toConvert.put("value", "time");
         toConvert.put("frob", "telephone");
@@ -45,7 +48,8 @@ public class JsonToBeanConverterTest extends TestCase {
         assertThat(bean.getValue(), is("time"));
     }
     
-    public void testShouldSetPrimitiveValuesToo() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void testShouldSetPrimitiveValuesToo() throws Exception {
         JSONObject toConvert = new JSONObject();
         toConvert.put("magicNumber", 3);
 
@@ -54,7 +58,8 @@ public class JsonToBeanConverterTest extends TestCase {
         assertThat(3L, is(map.get("magicNumber")));
     }
 
-    public void testShouldPopulateFieldsOnNestedBeans() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void testShouldPopulateFieldsOnNestedBeans() throws Exception {
         JSONObject toConvert = new JSONObject();
         toConvert.put("name", "frank");
         JSONObject child = new JSONObject();
@@ -77,7 +82,8 @@ public class JsonToBeanConverterTest extends TestCase {
         assertEquals(capabilities, readCapabilities);
     }
 
-    public void testShouldBeAbleToInstantiateBooleans() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void testShouldBeAbleToInstantiateBooleans() throws Exception {
         JSONArray array = new JSONArray();
         array.add(true);
         array.add(false);
@@ -89,7 +95,8 @@ public class JsonToBeanConverterTest extends TestCase {
         assertFalse(second);
     }
     
-    public void testShouldUseAMapToRepresentComplexObjects() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void testShouldUseAMapToRepresentComplexObjects() throws Exception {
         JSONObject toModel = new JSONObject();
         toModel.put("thing", "hairy");
         toModel.put("hairy", "true");
@@ -98,7 +105,8 @@ public class JsonToBeanConverterTest extends TestCase {
         assertEquals(2, modelled.size());
     }
 
-    public void testShouldConvertAResponseWithAnElementInIt() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void testShouldConvertAResponseWithAnElementInIt() throws Exception {
         String json = "{\"value\":{\"value\":\"\",\"text\":\"\",\"selected\":false,\"enabled\":true,\"id\":\"three\"},\"context\":\"con\",\"sessionId\":\"sess\",\"error\":false}";
         Response converted = new JsonToBeanConverter().convert(Response.class, json);
 
@@ -132,7 +140,8 @@ public class JsonToBeanConverterTest extends TestCase {
     }
 
 
-    public void testCanHandleValueBeingAnArray() throws Exception {
+    @SuppressWarnings("unchecked")
+	public void testCanHandleValueBeingAnArray() throws Exception {
       String[] value = {"Cheese", "Peas"};
 
       Response response = new Response();
