@@ -1,17 +1,24 @@
 package com.googlecode.webdriver.remote;
 
+import com.googlecode.webdriver.By;
+import com.googlecode.webdriver.Cookie;
+import com.googlecode.webdriver.NoSuchElementException;
+import com.googlecode.webdriver.Speed;
 import com.googlecode.webdriver.WebDriver;
 import com.googlecode.webdriver.WebElement;
-import com.googlecode.webdriver.By;
-import com.googlecode.webdriver.NoSuchElementException;
 import com.googlecode.webdriver.internal.FindsById;
 import com.googlecode.webdriver.internal.FindsByLinkText;
 import com.googlecode.webdriver.internal.FindsByName;
 import com.googlecode.webdriver.internal.FindsByXPath;
+import com.googlecode.webdriver.internal.ReturnedCookie;
 
+import java.lang.reflect.Constructor;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.lang.reflect.Constructor;
+import java.util.Set;
 
 public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, FindsByName, FindsByXPath {
 	private CommandExecutor executor;
@@ -121,7 +128,7 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     public Options manage() {
-        throw new UnsupportedOperationException();
+        return new RemoteWebDriverOptions();
     }
 
     @SuppressWarnings("unchecked")
@@ -185,4 +192,55 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 
         return response;
     }
+
+  private class RemoteWebDriverOptions implements Options {
+    public void addCookie(Cookie cookie) {
+      execute(RuntimeException.class, "addCookie", cookie);
+    }
+
+    public void deleteCookieNamed(String name) {
+      HashMap<String, String> map = new HashMap<String, String>();
+      map.put("name", name);
+      execute(RuntimeException.class, "deleteCookie", map);
+    }
+
+    public void deleteCookie(Cookie cookie) {
+      deleteCookieNamed(cookie.getName());
+    }
+
+    public void deleteAllCookies() {
+      execute(RuntimeException.class, "deleteAllCookies");
+    }
+
+    public Set<Cookie> getCookies() {
+      Object returned = execute(RuntimeException.class, "getAllCookies").getValue();
+
+      try {
+        List<Map<String, Object>> cookies = new JsonToBeanConverter().convert(List.class, returned);
+        Set<Cookie> toReturn = new HashSet<Cookie>();
+        for (Map<String, Object> rawCookie : cookies) {
+          String name = (String) rawCookie.get("name");
+          String value = (String) rawCookie.get("value");
+          String path = (String) rawCookie.get("path");
+          String domain = (String) rawCookie.get("domain");
+          Boolean secure = (Boolean) rawCookie.get("secure");
+          toReturn.add(new ReturnedCookie(name, value, domain, path, null, secure));
+        }
+
+        return toReturn;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+
+    }
+
+    public Speed getMouseSpeed() {
+      throw new UnsupportedOperationException("getMouseSpeed");
+    }
+
+    public void setMouseSpeed(Speed speed) {
+      throw new UnsupportedOperationException("setMouseSpeed");
+
+    }
+  }
 }

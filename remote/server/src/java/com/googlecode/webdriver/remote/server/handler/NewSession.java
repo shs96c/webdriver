@@ -12,12 +12,12 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class NewSession implements Handler, JsonParametersAware {
-    private DriverSessions allSession;
+    private DriverSessions allSessions;
     private Capabilities desiredCapabilities;
     private SessionId sessionId;
 
     public NewSession(DriverSessions allSession) {
-        this.allSession = allSession;
+        this.allSessions = allSession;
     }
 
     public void setJsonParameters(JSONArray allParameters) throws Exception {
@@ -25,7 +25,7 @@ public class NewSession implements Handler, JsonParametersAware {
     }
     
     public ResultType handle() throws Exception {
-        sessionId = allSession.newSession(desiredCapabilities);
+        sessionId = allSessions.newSession(desiredCapabilities);
         return ResultType.SUCCESS;
 	}
 	

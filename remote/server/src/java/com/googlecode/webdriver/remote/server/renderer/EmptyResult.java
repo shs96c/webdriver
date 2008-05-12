@@ -8,6 +8,6 @@ import javax.servlet.http.HttpServletResponse;
 
 public class EmptyResult implements Renderer {
     public void render(HttpServletRequest request, HttpServletResponse response, Handler handler) throws Exception {
-        response.setStatus(200);
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 }

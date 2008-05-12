@@ -20,15 +20,17 @@ import java.io.IOException;
 public class DriverServlet extends HttpServlet {
 	private UrlMapper getMapper;
 	private UrlMapper postMapper;
-	
-	@Override
+        private UrlMapper deleteMapper;
+
+        @Override
 	public void init() throws ServletException {
 		super.init();
 	
 		DriverSessions driverSessions = new DriverSessions();
 
         getMapper = new UrlMapper(driverSessions);
-		postMapper = new UrlMapper(driverSessions);
+        postMapper = new UrlMapper(driverSessions);
+        deleteMapper = new UrlMapper(driverSessions);
 
         getMapper.addGlobalHandler(ResultType.EXCEPTION, new JsonErrorExceptionResult(":exception", ":response"));
         postMapper.addGlobalHandler(ResultType.EXCEPTION, new JsonErrorExceptionResult(":exception", ":response"));
@@ -67,25 +69,40 @@ public class DriverServlet extends HttpServlet {
         getMapper.bind("/session/:sessionId/:context/element/:id/enabled", GetElementEnabled.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
         getMapper.bind("/session/:sessionId/:context/element/:id/:name", GetElementAttribute.class).on(ResultType.SUCCESS, new JsonResult(":response"));
-    }
-	
-	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		try {
-			ResultConfig config = getMapper.getConfig(request.getPathInfo());
-			config.handle(request.getPathInfo(), request, response);
-		} catch (Exception e) {
-			throw new ServletException(e);
-		}
-	}
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            ResultConfig config = postMapper.getConfig(request.getPathInfo());
-			config.handle(request.getPathInfo(), request, response);
-		} catch (Exception e) {
-			throw new ServletException(e);
-		}
+        getMapper.bind("/session/:sessionId/:context/cookie", GetAllCookies.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+        postMapper.bind("/session/:sessionId/:context/cookie", AddCookie.class).on(ResultType.SUCCESS, new EmptyResult());
+        deleteMapper.bind("/session/:sessionId/:context/cookie", DeleteCookie.class).on(ResultType.SUCCESS, new EmptyResult());
+        deleteMapper.bind("/session/:sessionId/:context/cookie/:name", DeleteNamedCookie.class).on(ResultType.SUCCESS, new EmptyResult());
     }
+
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+    handleRequest(getMapper, request, response);
+  }
+
+  @Override
+  protected void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+    handleRequest(postMapper, request, response);
+  }
+
+
+  @Override
+  protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+    handleRequest(deleteMapper, request, response);
+  }
+
+  protected void handleRequest(UrlMapper mapper, HttpServletRequest request, HttpServletResponse response)
+      throws ServletException {
+      try {
+        ResultConfig config = mapper.getConfig(request.getPathInfo());
+        config.handle(request.getPathInfo(), request, response);
+      } catch (Exception e) {
+        throw new ServletException(e);
+      }
+    }
+
 }

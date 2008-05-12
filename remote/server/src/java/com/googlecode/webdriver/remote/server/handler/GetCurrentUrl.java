@@ -7,7 +7,7 @@ import com.googlecode.webdriver.remote.Response;
 public class GetCurrentUrl extends WebDriverHandler {
     private Response response;
 
-    public GetCurrentUrl(DriverSessions sessions) {
+      public GetCurrentUrl(DriverSessions sessions) {
         super(sessions);
     }
 
