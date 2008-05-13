@@ -2,7 +2,6 @@ package com.googlecode.webdriver.remote;
 
 import com.googlecode.webdriver.By;
 import com.googlecode.webdriver.Cookie;
-import com.googlecode.webdriver.NoSuchElementException;
 import com.googlecode.webdriver.Speed;
 import com.googlecode.webdriver.WebDriver;
 import com.googlecode.webdriver.WebElement;
@@ -11,15 +10,14 @@ import com.googlecode.webdriver.internal.FindsByLinkText;
 import com.googlecode.webdriver.internal.FindsByName;
 import com.googlecode.webdriver.internal.FindsByXPath;
 import com.googlecode.webdriver.internal.ReturnedCookie;
+import static com.googlecode.webdriver.remote.MapMaker.map;
 
 import java.lang.reflect.Constructor;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.ArrayList;
 
 public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, FindsByName, FindsByXPath {
 	private CommandExecutor executor;
@@ -72,43 +70,43 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
 
 
     public WebElement findElementById(String using) {
-        Response response = execute(NoSuchElementException.class, "findElement", "id", using);
+        Response response = execute("findElement", "id", using);
         return getElementFrom(response);
     }
 
     public List<WebElement> findElementsById(String using) {
-      Response response = execute(RuntimeException.class, "findElements", "id", using);
+      Response response = execute("findElements", "id", using);
       return getElementsFrom(response);
     }
 
 
     public WebElement findElementByLinkText(String using) {
-        Response response = execute(NoSuchElementException.class, "findElement", "link text", using);
+        Response response = execute("findElement", "link text", using);
         return getElementFrom(response);
     }
 
     public List<WebElement> findElementsByLinkText(String using) {
-        Response response = execute(RuntimeException.class, "findElements", "link text", using);
+        Response response = execute("findElements", "link text", using);
         return getElementsFrom(response);
     }
 
   public WebElement findElementByName(String using) {
-        Response response = execute(NoSuchElementException.class, "findElement", "name", using);
+        Response response = execute("findElement", "name", using);
         return getElementFrom(response);
     }
 
     public List<WebElement> findElementsByName(String using) {
-      Response response = execute(RuntimeException.class, "findElements", "name", using);
+      Response response = execute("findElements", "name", using);
       return getElementsFrom(response);
     }
 
     public WebElement findElementByXPath(String using) {
-        Response response = execute(NoSuchElementException.class, "findElement", "xpath", using);
+        Response response = execute("findElement", "xpath", using);
         return getElementFrom(response);
     }
 
     public List<WebElement> findElementsByXPath(String using) {
-      Response response = execute(RuntimeException.class, "findElements", "xpath", using);
+      Response response = execute("findElements", "xpath", using);
       return getElementsFrom(response);
     }
 
@@ -119,15 +117,15 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     public void close() {
-        throw new UnsupportedOperationException();
+        execute("close");
     }
 
     public void quit() {
-        throw new UnsupportedOperationException();
+        execute("quit");
     }
 
     public TargetLocator switchTo() {
-        throw new UnsupportedOperationException();
+        return new RemoteTargetLocator();
     }
 
     public Navigation navigate() {
@@ -167,117 +165,156 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
       return toReturn;
     }
 
+    @SuppressWarnings({"unchecked"})
     protected Response execute(String commandName, Object... parameters) {
-        return execute(RuntimeException.class, commandName, parameters);
-    }
+      Command command = new Command(sessionId, new Context("foo"), commandName, parameters);
 
-    @SuppressWarnings("unchecked")
-	protected Response execute(Class<? extends RuntimeException> throwOnFailure, String commandName, Object... parameters) {
-        Command command = new Command(sessionId, new Context("foo"), commandName, parameters);
-
-        Response response = new Response();
-
-        try {
-            response = executor.execute(command);
-        } catch (Exception e) {
-            response.setError(true);
-            response.setValue(e.getStackTrace());
-        }
-
-        if (response.isError()) {
-            RuntimeException toThrow;
-            try {
-                Constructor<? extends RuntimeException> constructor = throwOnFailure.getConstructor(String.class);
-                toThrow = constructor.newInstance("Place holder");
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException("Place holder in backup exception");
-            }
-
-            List elements = (List) response.getValue();
-            StackTraceElement[] trace = new StackTraceElement[elements.size()];
-
-            for (int i = 0; i < elements.size(); i++) {
-              Map values = (Map) elements.get(i);
-
-              // I'm so sorry.
-              long lineNumber = (Long) values.get("lineNumber");
-
-              trace[i] = new StackTraceElement((String) values.get("className"),
-                                               (String) values.get("methodName"),
-                                               (String) values.get("fileName"),
-                                               (int) lineNumber);
-            }
-
-            toThrow.setStackTrace(trace);
-            throw toThrow;
-        }
-
-        return response;
-    }
-
-  private class RemoteWebDriverOptions implements Options {
-    public void addCookie(Cookie cookie) {
-      execute(RuntimeException.class, "addCookie", cookie);
-    }
-
-    public void deleteCookieNamed(String name) {
-      HashMap<String, String> map = new HashMap<String, String>();
-      map.put("name", name);
-      execute(RuntimeException.class, "deleteCookie", map);
-    }
-
-    public void deleteCookie(Cookie cookie) {
-      deleteCookieNamed(cookie.getName());
-    }
-
-    public void deleteAllCookies() {
-      execute(RuntimeException.class, "deleteAllCookies");
-    }
-
-    public Set<Cookie> getCookies() {
-      Object returned = execute(RuntimeException.class, "getAllCookies").getValue();
+      Response response = new Response();
 
       try {
-        List<Map<String, Object>> cookies = new JsonToBeanConverter().convert(List.class, returned);
-        Set<Cookie> toReturn = new HashSet<Cookie>();
-        for (Map<String, Object> rawCookie : cookies) {
-          String name = (String) rawCookie.get("name");
-          String value = (String) rawCookie.get("value");
-          String path = (String) rawCookie.get("path");
-          String domain = (String) rawCookie.get("domain");
-          Boolean secure = (Boolean) rawCookie.get("secure");
-          toReturn.add(new ReturnedCookie(name, value, domain, path, null, secure));
-        }
-
-        return toReturn;
+        response = executor.execute(command);
       } catch (Exception e) {
-        throw new RuntimeException(e);
+        response.setError(true);
+        response.setValue(e.getStackTrace());
       }
 
+      if (response.isError()) {
+        Map rawException = (Map) response.getValue();
+
+        String message = (String) rawException.get("message");
+        String className = (String) rawException.get("class");
+
+        RuntimeException toThrow;
+        try {
+          Class<?> aClass;
+          try {
+            aClass = Class.forName(className);
+            if (!RuntimeException.class.isAssignableFrom(aClass)) {
+              aClass = RuntimeException.class;
+            }
+          } catch (ClassNotFoundException e) {
+            aClass = RuntimeException.class;
+          }
+
+          try {
+            Constructor<? extends RuntimeException> constructor =
+                (Constructor<? extends RuntimeException>) aClass.getConstructor(String.class);
+            toThrow = constructor.newInstance(message);
+          } catch (NoSuchMethodException e) {
+            toThrow = (RuntimeException) aClass.newInstance();
+          }
+
+          List<Map> elements = (List<Map>) rawException.get("stackTrace");
+          StackTraceElement[] trace = new StackTraceElement[elements.size()];
+
+          for (int i = 0; i < elements.size(); i++) {
+            Map values = (Map) elements.get(i);
+
+            // I'm so sorry.
+            long lineNumber = (Long) values.get("lineNumber");
+
+            trace[i] = new StackTraceElement((String) values.get("className"),
+                                             (String) values.get("methodName"),
+                                             (String) values.get("fileName"),
+                                             (int) lineNumber);
+          }
+
+          toThrow.setStackTrace(trace);
+        } catch (Exception e) {
+          toThrow = new RuntimeException(e);
+        }
+        throw toThrow;
+      }
+
+      return response;
     }
 
-    public Speed getMouseSpeed() {
-      throw new UnsupportedOperationException("getMouseSpeed");
+    private class RemoteWebDriverOptions implements Options {
+
+      public void addCookie(Cookie cookie) {
+        execute("addCookie", cookie);
+      }
+
+      public void deleteCookieNamed(String name) {
+        execute("deleteCookie", map("name", name));
+      }
+
+      public void deleteCookie(Cookie cookie) {
+        deleteCookieNamed(cookie.getName());
+      }
+
+      public void deleteAllCookies() {
+        execute("deleteAllCookies");
+      }
+
+      public Set<Cookie> getCookies() {
+        Object returned = execute("getAllCookies").getValue();
+
+        try {
+          List<Map<String, Object>> cookies =
+              new JsonToBeanConverter().convert(List.class, returned);
+          Set<Cookie> toReturn = new HashSet<Cookie>();
+          for (Map<String, Object> rawCookie : cookies) {
+            String name = (String) rawCookie.get("name");
+            String value = (String) rawCookie.get("value");
+            String path = (String) rawCookie.get("path");
+            String domain = (String) rawCookie.get("domain");
+            Boolean secure = (Boolean) rawCookie.get("secure");
+            toReturn.add(new ReturnedCookie(name, value, domain, path, null, secure));
+          }
+
+          return toReturn;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+
+      }
+
+      public Speed getMouseSpeed() {
+        throw new UnsupportedOperationException("getMouseSpeed");
+      }
+
+      public void setMouseSpeed(Speed speed) {
+        throw new UnsupportedOperationException("setMouseSpeed");
+
+      }
     }
 
-    public void setMouseSpeed(Speed speed) {
-      throw new UnsupportedOperationException("setMouseSpeed");
+    private class RemoteNavigation implements Navigation {
 
+      public void back() {
+        execute("back");
+      }
+
+      public void forward() {
+        execute("forward");
+      }
+
+      public void to(String url) {
+        get(url);
+      }
+    }
+
+    private class RemoteTargetLocator implements TargetLocator {
+
+      public WebDriver frame(int frameIndex) {
+        execute("switchToFrame", map("id", frameIndex));
+        return RemoteWebDriver.this;
+      }
+
+      public WebDriver frame(String frameName) {
+        execute("switchToFrame", map("id", frameName));
+        return RemoteWebDriver.this;
+      }
+
+      public WebDriver window(String windowName) {
+        execute("switchToWindow", map("name", windowName));
+        return RemoteWebDriver.this;
+      }
+
+      public WebDriver defaultContent() {
+        execute("switchToFrame", map("id", null));
+        return RemoteWebDriver.this;
+      }
     }
   }
-
-  private class RemoteNavigation implements Navigation {
-    public void back() {
-      execute("back");
-    }
-
-    public void forward() {
-      execute("forward");
-    }
-
-    public void to(String url) {
-      get(url);
-    }
-  }
-}

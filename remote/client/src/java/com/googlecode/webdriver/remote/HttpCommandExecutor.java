@@ -8,6 +8,8 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URLEncoder;
+import java.io.UnsupportedEncodingException;
 
 public class HttpCommandExecutor implements CommandExecutor {
     private enum HttpVerb {
@@ -40,6 +42,7 @@ public class HttpCommandExecutor implements CommandExecutor {
         client.getHostConfiguration().setHost("localhost", 7055);
 		
         nameToUrl.put("newSession",        new CommandInfo("/session", HttpVerb.POST));
+        nameToUrl.put("quit",              new CommandInfo("/session/:sessionId", HttpVerb.DELETE));
         nameToUrl.put("get",               new CommandInfo("/session/:sessionId/:context/url", HttpVerb.POST));
         nameToUrl.put("forward",           new CommandInfo("/session/:sessionId/:context/forward", HttpVerb.POST));
         nameToUrl.put("back",              new CommandInfo("/session/:sessionId/:context/back", HttpVerb.POST));
@@ -70,9 +73,13 @@ public class HttpCommandExecutor implements CommandExecutor {
         nameToUrl.put("addCookie",        new CommandInfo("/session/:sessionId/:context/cookie", HttpVerb.POST));
         nameToUrl.put("deleteAllCookies", new CommandInfo("/session/:sessionId/:context/cookie", HttpVerb.DELETE));
         nameToUrl.put("deleteCookie",     new CommandInfo("/session/:sessionId/:context/cookie/:name", HttpVerb.DELETE));
+
+        nameToUrl.put("switchToFrame",  new CommandInfo("/session/:sessionId/:context/frame/:id", HttpVerb.POST));
+        nameToUrl.put("switchToWindow", new CommandInfo("/session/:sessionId/:context/window/:name", HttpVerb.POST));
+        nameToUrl.put("close",          new CommandInfo("/session/:sessionId/:context/window", HttpVerb.DELETE));
     }
-	
-	public Response execute(Command command) throws Exception {
+
+  public Response execute(Command command) throws Exception {
 		CommandInfo info = nameToUrl.get(command.getMethodName());
                 HttpMethod httpMethod = info.getMethod(command);
 
@@ -147,6 +154,8 @@ public class HttpCommandExecutor implements CommandExecutor {
                 
                 urlBuilder.append("/");
                 if (part.startsWith(":")) {
+                  String value = get(part.substring(1), command);
+                  if (value != null)
                     urlBuilder.append(get(part.substring(1), command));
                 } else {
                     urlBuilder.append(part);
@@ -158,7 +167,7 @@ public class HttpCommandExecutor implements CommandExecutor {
         }
 
         @SuppressWarnings("unchecked")
-		private String get(String propertyName, Command command) {
+        private String get(String propertyName, Command command) {
             if ("sessionId".equals(propertyName))
                 return command.getSessionId().toString();
             if ("context".equals(propertyName))
@@ -166,10 +175,18 @@ public class HttpCommandExecutor implements CommandExecutor {
 
             // Attempt to extract the property name from the parameters
             if (command.getParameters().length > 0 && command.getParameters()[0] instanceof Map) {
-                return String.valueOf(((Map) command.getParameters()[0]).get(propertyName));
+              Object value = ((Map) command.getParameters()[0]).get(propertyName);
+              if (value != null)
+                try {
+                  return URLEncoder.encode(String.valueOf(value), "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                  // Can never happen. UTF-8 ships with java
+                  return String.valueOf(value);
+                }
+              return null;
             }
 
-            return "place-holder";
+            throw new IllegalArgumentException("Cannot determine property: " + propertyName);
         }
     }
 }

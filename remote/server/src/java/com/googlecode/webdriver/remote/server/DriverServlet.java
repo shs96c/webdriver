@@ -34,11 +34,14 @@ public class DriverServlet extends HttpServlet {
 
         getMapper.addGlobalHandler(ResultType.EXCEPTION, new JsonErrorExceptionResult(":exception", ":response"));
         postMapper.addGlobalHandler(ResultType.EXCEPTION, new JsonErrorExceptionResult(":exception", ":response"));
+        deleteMapper.addGlobalHandler(ResultType.EXCEPTION, new JsonErrorExceptionResult(":exception", ":response"));
 
         postMapper.bind("/session", NewSession.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context"));
 		getMapper.bind("/session/:sessionId/:context", GetSessionCapabilities.class)
 			.on(ResultType.SUCCESS, new ForwardResult("/WEB-INF/views/sessionCapabilities.jsp"))
 			.on(ResultType.SUCCESS, new JsonResult(":response"), "application/json");
+
+        deleteMapper.bind("/session/:sessionId", DeleteSession.class).on(ResultType.SUCCESS, new EmptyResult());
 
         postMapper.bind("/session/:sessionId/:context/url", ChangeUrl.class).on(ResultType.SUCCESS, new EmptyResult());
         getMapper.bind("/session/:sessionId/:context/url", GetCurrentUrl.class).on(ResultType.SUCCESS, new JsonResult(":response"));
@@ -80,6 +83,11 @@ public class DriverServlet extends HttpServlet {
         postMapper.bind("/session/:sessionId/:context/cookie", AddCookie.class).on(ResultType.SUCCESS, new EmptyResult());
         deleteMapper.bind("/session/:sessionId/:context/cookie", DeleteCookie.class).on(ResultType.SUCCESS, new EmptyResult());
         deleteMapper.bind("/session/:sessionId/:context/cookie/:name", DeleteNamedCookie.class).on(ResultType.SUCCESS, new EmptyResult());
+
+        postMapper.bind("/session/:sessionId/:context/frame", SwitchToFrame.class).on(ResultType.SUCCESS, new EmptyResult());
+        postMapper.bind("/session/:sessionId/:context/frame/:id", SwitchToFrame.class).on(ResultType.SUCCESS, new EmptyResult());
+        postMapper.bind("/session/:sessionId/:context/window/:name", SwitchToWindow.class).on(ResultType.SUCCESS, new EmptyResult());
+        deleteMapper.bind("/session/:sessionId/:context/window", CloseWindow.class).on(ResultType.SUCCESS, new EmptyResult());
     }
 
   @Override

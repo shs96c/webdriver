@@ -4,7 +4,7 @@ import com.googlecode.webdriver.WebDriver;
 import com.googlecode.webdriver.remote.Context;
 
 public class Session {
-	private final WebDriver driver;
+    private final WebDriver driver;
     private KnownElements knownElements = new KnownElements();
 
     public Session(WebDriver driver) {

@@ -1,6 +1,7 @@
 package com.googlecode.webdriver.remote;
 
 import com.googlecode.webdriver.WebElement;
+import static com.googlecode.webdriver.remote.MapMaker.map;
 
 import java.util.List;
 import java.util.HashMap;
@@ -51,7 +52,7 @@ public class RemoteWebElement implements WebElement {
     }
 
     public boolean toggle() {
-        return (Boolean) parent.execute(UnsupportedOperationException.class, "toggleElement", map("id", id)).getValue();
+        return (Boolean) parent.execute("toggleElement", map("id", id)).getValue();
     }
 
     public boolean isSelected() {
@@ -59,7 +60,7 @@ public class RemoteWebElement implements WebElement {
     }
 
     public void setSelected() {
-        parent.execute(UnsupportedOperationException.class, "setElementSelected", map("id", id));
+        parent.execute("setElementSelected", map("id", id));
     }
 
     public boolean isEnabled() {
@@ -74,14 +75,5 @@ public class RemoteWebElement implements WebElement {
     public List<WebElement> getChildrenOfType(String tagName) {
         Response response = parent.execute("getChildrenOfType", map("id", id, "name", tagName));
         return parent.getElementsFrom(response);
-    }
-
-	protected Map<Object, Object> map(Object... keysToValues) {
-        Map<Object, Object> toReturn = new HashMap<Object, Object>();
-        for (int i = 0; i < keysToValues.length; i += 2) {
-            toReturn.put(keysToValues[i], keysToValues[i+1]);
-        }
-
-        return toReturn;
     }
 }

@@ -27,13 +27,13 @@ public class NewSession implements Handler, JsonParametersAware {
     public ResultType handle() throws Exception {
         sessionId = allSessions.newSession(desiredCapabilities);
         return ResultType.SUCCESS;
-	}
+    }
 	
-	public String getSessionId() {
-		return sessionId.toString();
-	}
-	
-	public String getContext() {
-		return "context";
-	}
+    public String getSessionId() {
+        return sessionId.toString();
+    }
+
+    public String getContext() {
+        return "context";
+    }
 }

@@ -46,4 +46,8 @@ public abstract class WebDriverHandler implements Handler {
     protected Response newResponse() {
         return new Response(sessionId, context);
     }
+
+    protected SessionId getRealSessionId() {
+      return sessionId;
+    }
 }

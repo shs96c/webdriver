@@ -19,7 +19,7 @@ public class JsonErrorExceptionResult extends ErrorJsonResult {
 
         Response res = new Response();
         res.setError(true);
-        res.setValue(e.getStackTrace());
+        res.setValue(e);
 
         request.setAttribute(propertyName, res);
 

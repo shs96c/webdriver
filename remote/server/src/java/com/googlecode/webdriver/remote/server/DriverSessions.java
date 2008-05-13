@@ -33,4 +33,8 @@ public class DriverSessions {
     public Session get(SessionId sessionId) {
 		return sessionIdToDriver.get(sessionId);
 	}
+
+  public void deleteSession(SessionId sessionId) {
+    sessionIdToDriver.remove(sessionId);
+  }
 }

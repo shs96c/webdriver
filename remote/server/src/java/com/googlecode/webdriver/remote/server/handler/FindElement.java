@@ -29,19 +29,10 @@ public class FindElement extends WebDriverHandler implements JsonParametersAware
     }
 
     public ResultType handle() throws Exception {
-        try {
-            WebElement element = getDriver().findElement(by);
-            elementId = getKnownElements().add(element);
+        WebElement element = getDriver().findElement(by);
+        elementId = getKnownElements().add(element);
 
-            return ResultType.SUCCESS;
-        } catch (NoSuchElementException e) {
-          response = newResponse();
-          response.setError(true);
-
-          response.setValue(e.getStackTrace());
-
-          return ResultType.ERROR;
-        }
+        return ResultType.SUCCESS;
     }
 
     public String getElement() {

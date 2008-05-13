@@ -14,6 +14,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -113,7 +114,14 @@ public class ResultConfig {
             addHandlerAttributesToRequest(request, handler);
         } catch (Exception e) {
             result = ResultType.EXCEPTION;
-            request.setAttribute("exception", e);
+            Throwable toUse = e;
+            if (e instanceof UndeclaredThrowableException) {
+              // An exception was thrown within an invocation handler. Not smart.
+              // Extract the original exception
+              toUse = e.getCause().getCause();
+            }
+
+            request.setAttribute("exception", toUse);
         }
 
         Set<Result> results = resultToRender.get(result);
