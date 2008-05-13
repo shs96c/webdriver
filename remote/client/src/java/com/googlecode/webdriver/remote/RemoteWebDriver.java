@@ -131,7 +131,7 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     public Navigation navigate() {
-        throw new UnsupportedOperationException();
+        return new RemoteNavigation();
     }
 
     public Options manage() {
@@ -264,6 +264,20 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     public void setMouseSpeed(Speed speed) {
       throw new UnsupportedOperationException("setMouseSpeed");
 
+    }
+  }
+
+  private class RemoteNavigation implements Navigation {
+    public void back() {
+      execute("back");
+    }
+
+    public void forward() {
+      execute("forward");
+    }
+
+    public void to(String url) {
+      get(url);
     }
   }
 }

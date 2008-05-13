@@ -43,6 +43,9 @@ public class DriverServlet extends HttpServlet {
         postMapper.bind("/session/:sessionId/:context/url", ChangeUrl.class).on(ResultType.SUCCESS, new EmptyResult());
         getMapper.bind("/session/:sessionId/:context/url", GetCurrentUrl.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
+        postMapper.bind("/session/:sessionId/:context/forward", GoForward.class).on(ResultType.SUCCESS, new EmptyResult());
+        postMapper.bind("/session/:sessionId/:context/back", GoBack.class).on(ResultType.SUCCESS, new EmptyResult());
+
         getMapper.bind("/session/:sessionId/:context/source", GetPageSource.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
         getMapper.bind("/session/:sessionId/:context/title", GetTitle.class).on(ResultType.SUCCESS, new JsonResult(":response"));
