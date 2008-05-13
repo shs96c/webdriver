@@ -18,8 +18,8 @@ public class SingleTestSuite {
               .usingDriver(driver)
               .keepDriverInstance()
               .includeJavascriptTests()
-              .onlyRun("FormHandlingTest")
-              .method("testShouldNotBeAbleToSelectSomethingThatIsDisabled")
+              .onlyRun("PageLoadingTest")
+//              .method("testShouldBeAbleToFlipToAFrameIdentifiedByItsId")
 //                        .leaveRunningAfterTest();
             ;  // Yeah, this look strange :)
 

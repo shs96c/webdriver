@@ -18,8 +18,9 @@ public class RemoteWebDriverTestSuite {
                     .addSourceDir("common")
 //                    .addSourceDir("../common")
 //                    .addSourceDir("remote/client")
+                    .keepDriverInstance()
                     .usingDriver(RemoteWebDriverForTest.class)
-                    .exclude("remote")
+                    .exclude("firefox")
                     .create();
 
 
@@ -30,7 +31,7 @@ public class RemoteWebDriverTestSuite {
 
     public static class RemoteWebDriverForTest extends RemoteWebDriver {
         public RemoteWebDriverForTest() throws Exception {
-            super(DesiredCapabilities.htmlUnit());
+            super(DesiredCapabilities.firefox());
         }
     }
 

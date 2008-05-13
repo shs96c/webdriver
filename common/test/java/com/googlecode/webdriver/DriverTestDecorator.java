@@ -24,8 +24,12 @@ public class DriverTestDecorator extends TestSetup {
 		super.setUp();
 		
 		if (driver != null && freshDriver) {
-			driver.quit();
-			driver = null;
+                   try {
+                        driver.quit();
+                   } catch (Exception e) {
+                     e.printStackTrace();
+                   }
+                    driver = null;
 		}
 		
 		if (getTest() instanceof NeedsDriver) {
@@ -42,7 +46,8 @@ public class DriverTestDecorator extends TestSetup {
 				driver = null;
 			} catch (Exception e) {
 				// this is okay --- the driver could be quit by the test
-			}
+                          driver = null;
+                        }
 		}
 		super.tearDown();
 	}
