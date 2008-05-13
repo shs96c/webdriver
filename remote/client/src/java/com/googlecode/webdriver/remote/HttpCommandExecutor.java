@@ -33,20 +33,22 @@ public class HttpCommandExecutor implements CommandExecutor {
     }
 
     private Map<String, CommandInfo> nameToUrl = new HashMap<String, CommandInfo>();
-	private HttpClient client;
+    private HttpClient client;
 	
-	public HttpCommandExecutor() {
-		client = new HttpClient();
-		client.getHostConfiguration().setHost("localhost", 7055);
+    public HttpCommandExecutor() {
+        client = new HttpClient();
+        client.getHostConfiguration().setHost("localhost", 7055);
 		
-        nameToUrl.put("newSession",   new CommandInfo("/session", HttpVerb.POST));
-        nameToUrl.put("get",          new CommandInfo("/session/:sessionId/:context/url", HttpVerb.POST));
-        nameToUrl.put("currentUrl",   new CommandInfo("/session/:sessionId/:context/url", HttpVerb.GET));
-        nameToUrl.put("getTitle",     new CommandInfo("/session/:sessionId/:context/title", HttpVerb.GET));
-        nameToUrl.put("pageSource",   new CommandInfo("/session/:sessionId/:context/source", HttpVerb.GET));
-        nameToUrl.put("setVisible",   new CommandInfo("/session/:sessionId/:context/visible", HttpVerb.POST));
-        nameToUrl.put("getVisible",   new CommandInfo("/session/:sessionId/:context/visible", HttpVerb.GET));
-        nameToUrl.put("findElement",  new CommandInfo("/session/:sessionId/:context/element", HttpVerb.POST));
+        nameToUrl.put("newSession",        new CommandInfo("/session", HttpVerb.POST));
+        nameToUrl.put("get",               new CommandInfo("/session/:sessionId/:context/url", HttpVerb.POST));
+        nameToUrl.put("currentUrl",        new CommandInfo("/session/:sessionId/:context/url", HttpVerb.GET));
+        nameToUrl.put("getTitle",          new CommandInfo("/session/:sessionId/:context/title", HttpVerb.GET));
+        nameToUrl.put("pageSource",        new CommandInfo("/session/:sessionId/:context/source", HttpVerb.GET));
+        nameToUrl.put("setVisible",        new CommandInfo("/session/:sessionId/:context/visible", HttpVerb.POST));
+        nameToUrl.put("getVisible",        new CommandInfo("/session/:sessionId/:context/visible", HttpVerb.GET));
+        nameToUrl.put("findElement",       new CommandInfo("/session/:sessionId/:context/element", HttpVerb.POST));
+        nameToUrl.put("findElements",      new CommandInfo("/session/:sessionId/:context/elements", HttpVerb.POST));
+        nameToUrl.put("getChildrenOfType", new CommandInfo("/session/:sessionId/:context/element/:id/children/:name", HttpVerb.POST));
 
         nameToUrl.put("clickElement",        new CommandInfo("/session/:sessionId/:context/element/:id/click", HttpVerb.POST));
         nameToUrl.put("clearElement",        new CommandInfo("/session/:sessionId/:context/element/:id/clear", HttpVerb.POST));

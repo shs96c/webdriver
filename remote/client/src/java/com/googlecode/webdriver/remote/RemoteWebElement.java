@@ -72,7 +72,8 @@ public class RemoteWebElement implements WebElement {
     }
 
     public List<WebElement> getChildrenOfType(String tagName) {
-        throw new UnsupportedOperationException();
+        Response response = parent.execute("getChildrenOfType", map("id", id, "name", tagName));
+        return parent.getElementsFrom(response);
     }
 
 	protected Map<Object, Object> map(Object... keysToValues) {

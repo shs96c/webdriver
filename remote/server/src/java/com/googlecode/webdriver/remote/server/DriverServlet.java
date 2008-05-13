@@ -55,6 +55,9 @@ public class DriverServlet extends HttpServlet {
             .on(ResultType.ERROR, new ErrorJsonResult(":response"));
         getMapper.bind("/session/:sessionId/:context/element/:elementId", DescribeElement.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
+        postMapper.bind("/session/:sessionId/:context/elements", FindElements.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+        postMapper.bind("/session/:sessionId/:context/element/:id/children/:name", FindChildElements.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+
         postMapper.bind("/session/:sessionId/:context/element/:id/click", ClickElement.class).on(ResultType.SUCCESS, new EmptyResult());
         getMapper.bind("/session/:sessionId/:context/element/:id/text", GetElementText.class).on(ResultType.SUCCESS, new JsonResult(":response"));
         postMapper.bind("/session/:sessionId/:context/element/:id/submit", SubmitElement.class).on(ResultType.SUCCESS, new EmptyResult());

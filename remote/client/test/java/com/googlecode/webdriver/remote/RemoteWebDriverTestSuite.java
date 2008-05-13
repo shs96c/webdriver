@@ -16,7 +16,7 @@ public class RemoteWebDriverTestSuite {
         Test rawSuite =
             new TestSuiteBuilder()
                     .addSourceDir("common")
-                    .addSourceDir("../common")
+//                    .addSourceDir("../common")
 //                    .addSourceDir("remote/client")
                     .usingDriver(RemoteWebDriverForTest.class)
                     .exclude("remote")

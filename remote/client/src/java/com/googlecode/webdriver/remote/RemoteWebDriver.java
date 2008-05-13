@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, FindsByName, FindsByXPath {
 	private CommandExecutor executor;
@@ -62,7 +63,7 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     public List<WebElement> findElements(By by) {
-        throw new UnsupportedOperationException();
+        return by.findElements(this);
     }
 
     public WebElement findElement(By by) {
@@ -76,7 +77,8 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     public List<WebElement> findElementsById(String using) {
-        throw new UnsupportedOperationException();
+      Response response = execute(RuntimeException.class, "findElements", "id", using);
+      return getElementsFrom(response);
     }
 
 
@@ -86,16 +88,18 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     public List<WebElement> findElementsByLinkText(String using) {
-        throw new UnsupportedOperationException();
+        Response response = execute(RuntimeException.class, "findElements", "link text", using);
+        return getElementsFrom(response);
     }
 
-    public WebElement findElementByName(String using) {
+  public WebElement findElementByName(String using) {
         Response response = execute(NoSuchElementException.class, "findElement", "name", using);
         return getElementFrom(response);
     }
 
     public List<WebElement> findElementsByName(String using) {
-        throw new UnsupportedOperationException();
+      Response response = execute(RuntimeException.class, "findElements", "name", using);
+      return getElementsFrom(response);
     }
 
     public WebElement findElementByXPath(String using) {
@@ -104,8 +108,11 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     public List<WebElement> findElementsByXPath(String using) {
-        throw new UnsupportedOperationException();
-    }// Misc
+      Response response = execute(RuntimeException.class, "findElements", "xpath", using);
+      return getElementsFrom(response);
+    }
+
+    // Misc
 
     public String getPageSource() {
         return (String) execute("pageSource").getValue();
@@ -132,7 +139,7 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     }
 
     @SuppressWarnings("unchecked")
-	private WebElement getElementFrom(Response response) {
+    private WebElement getElementFrom(Response response) {
         try {
             Map<Object, Object> rawResponse = (Map<Object, Object>) response.getValue();
             RemoteWebElement toReturn = new RemoteWebElement();
@@ -142,6 +149,22 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected List<WebElement> getElementsFrom(Response response) {
+        List<WebElement> toReturn = new ArrayList<WebElement>();
+        List<String> urls = (List<String>) response.getValue();
+        for (String url : urls) {
+            // We cheat here, because we know that the URL for an element ends with its ID.
+            // This is lazy and bad. We should, instead, go to each of the URLs in turn.
+            String[] parts = url.split("/");
+            RemoteWebElement element = new RemoteWebElement();
+            element.setId(parts[parts.length - 1]);
+            element.setParent(this);
+            toReturn.add(element);
+        }
+
+      return toReturn;
     }
 
     protected Response execute(String commandName, Object... parameters) {
