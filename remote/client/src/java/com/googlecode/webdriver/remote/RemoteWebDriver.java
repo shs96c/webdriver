@@ -9,11 +9,12 @@ import com.googlecode.webdriver.internal.FindsById;
 import com.googlecode.webdriver.internal.FindsByLinkText;
 import com.googlecode.webdriver.internal.FindsByName;
 import com.googlecode.webdriver.internal.FindsByXPath;
-import com.googlecode.webdriver.internal.ReturnedCookie;
 import com.googlecode.webdriver.internal.OperatingSystem;
+import com.googlecode.webdriver.internal.ReturnedCookie;
 import static com.googlecode.webdriver.remote.MapMaker.map;
 
 import java.lang.reflect.Constructor;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,15 +22,21 @@ import java.util.Map;
 import java.util.Set;
 
 public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, FindsByName, FindsByXPath {
-	private CommandExecutor executor;
+    private CommandExecutor executor;
     private Capabilities capabilities;
     private SessionId sessionId;
 
     @SuppressWarnings({"unchecked"})
-    public RemoteWebDriver(Capabilities desiredCapabilities) throws Exception {
-		executor = new HttpCommandExecutor();
+    public RemoteWebDriver(URL remoteAddress, Capabilities desiredCapabilities) throws Exception {
+      URL toUse = remoteAddress;
+      if (remoteAddress == null) {
+        String remoteServer = System.getProperty("webdriver.remote.server");
+        toUse = remoteServer == null ? null : new URL(remoteServer);
+      }
 
-        Response response = execute("newSession", desiredCapabilities);
+      executor = new HttpCommandExecutor(toUse);
+
+      Response response = execute("newSession", desiredCapabilities);
 
       Map<String, Object> rawCapabilities = (Map<String, Object>) response.getValue();
       String browser = (String) rawCapabilities.get("browserName");
@@ -40,6 +47,10 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
       returnedCapabilities.setJavascriptEnabled((Boolean) rawCapabilities.get("javascriptEnabled"));
       capabilities = returnedCapabilities;
       sessionId = new SessionId(response.getSessionId());
+    }
+
+    public RemoteWebDriver(Capabilities desiredCapabilities) throws Exception {
+      this(null, desiredCapabilities);
     }
 
     public Capabilities getCapabilities() {

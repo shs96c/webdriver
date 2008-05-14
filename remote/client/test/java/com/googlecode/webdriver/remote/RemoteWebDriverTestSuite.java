@@ -1,6 +1,7 @@
 package com.googlecode.webdriver.remote;
 
 import java.io.File;
+import java.net.URL;
 
 import junit.extensions.TestSetup;
 import junit.framework.Test;
@@ -32,7 +33,7 @@ public class RemoteWebDriverTestSuite {
 
     public static class RemoteWebDriverForTest extends RemoteWebDriver {
         public RemoteWebDriverForTest() throws Exception {
-            super(DesiredCapabilities.firefox());
+            super(new URL("http://localhost:7055/hub"), DesiredCapabilities.firefox());
         }
     }
 

@@ -9,10 +9,13 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
 import java.util.HashMap;
 import java.util.Map;
 import java.net.URLEncoder;
+import java.net.URL;
 import java.io.UnsupportedEncodingException;
 
 public class HttpCommandExecutor implements CommandExecutor {
-    private enum HttpVerb {
+  private final String remotePath;
+
+  private enum HttpVerb {
       GET() {
         public HttpMethod createMethod(String url) {
           GetMethod getMethod = new GetMethod(url);
@@ -37,9 +40,16 @@ public class HttpCommandExecutor implements CommandExecutor {
     private Map<String, CommandInfo> nameToUrl = new HashMap<String, CommandInfo>();
     private HttpClient client;
 	
-    public HttpCommandExecutor() {
-        client = new HttpClient();
-        client.getHostConfiguration().setHost("localhost", 7055);
+    public HttpCommandExecutor(URL addressOfRemoteServer) throws Exception {
+      if (addressOfRemoteServer == null) {
+        throw new IllegalArgumentException("You must specify a remote address to connect to");
+      }
+
+      this.remotePath = addressOfRemoteServer.getPath();
+
+      URI uri = new URI(addressOfRemoteServer.toString(), false);
+      client = new HttpClient();
+      client.getHostConfiguration().setHost(uri);
 		
         nameToUrl.put("newSession",        new CommandInfo("/session", HttpVerb.POST));
         nameToUrl.put("quit",              new CommandInfo("/session/:sessionId", HttpVerb.DELETE));
@@ -88,31 +98,33 @@ public class HttpCommandExecutor implements CommandExecutor {
     }
 
   public Response execute(Command command) throws Exception {
-		CommandInfo info = nameToUrl.get(command.getMethodName());
-                HttpMethod httpMethod = info.getMethod(command);
+    CommandInfo info = nameToUrl.get(command.getMethodName());
+    HttpMethod httpMethod = info.getMethod(remotePath, command);
 
-        httpMethod.addRequestHeader("Accept", "application/json");
+    httpMethod.addRequestHeader("Accept", "application/json");
 
-        String payload = new BeanToJsonConverter().convert(command.getParameters());
+    String payload = new BeanToJsonConverter().convert(command.getParameters());
 
-        if (httpMethod instanceof PostMethod)
-            ((PostMethod) httpMethod).setRequestEntity(new StringRequestEntity(payload, "application/json", "UTF-8"));
+    if (httpMethod instanceof PostMethod) {
+      ((PostMethod) httpMethod)
+          .setRequestEntity(new StringRequestEntity(payload, "application/json", "UTF-8"));
+    }
 
-        client.executeMethod(httpMethod);
+    client.executeMethod(httpMethod);
 
-        // TODO: SimonStewart: 2008-04-25: This is really shabby
-        if (isRedirect(httpMethod)) {
-            Header newLocation = httpMethod.getResponseHeader("location");
-            httpMethod = new GetMethod(newLocation.getValue());
-            httpMethod.setFollowRedirects(true);
-            httpMethod.addRequestHeader("Accept", "application/json");
-            client.executeMethod(httpMethod);
-        }
+    // TODO: SimonStewart: 2008-04-25: This is really shabby
+    if (isRedirect(httpMethod)) {
+      Header newLocation = httpMethod.getResponseHeader("location");
+      httpMethod = new GetMethod(newLocation.getValue());
+      httpMethod.setFollowRedirects(true);
+      httpMethod.addRequestHeader("Accept", "application/json");
+      client.executeMethod(httpMethod);
+    }
 
-        Response response = createResponse(httpMethod);
+    Response response = createResponse(httpMethod);
 
-        return response;
-	}
+    return response;
+  }
 
     private Response createResponse(HttpMethod httpMethod) throws Exception {
         Response response;
@@ -146,55 +158,59 @@ public class HttpCommandExecutor implements CommandExecutor {
     }
 
     private static class CommandInfo {
-		private final String url;
-		private final HttpVerb verb;
+      private final String url;
+      private final HttpVerb verb;
 
-		public CommandInfo(String url, HttpVerb verb) {
-			this.url = url;
-			this.verb = verb;
-		}
-		
-		public HttpMethod getMethod(Command command) {
-            StringBuilder urlBuilder = new StringBuilder("/hub");
-            for (String part : url.split("/")) {
-                if (part.length() == 0)
-                    continue;
-                
-                urlBuilder.append("/");
-                if (part.startsWith(":")) {
-                  String value = get(part.substring(1), command);
-                  if (value != null)
-                    urlBuilder.append(get(part.substring(1), command));
-                } else {
-                    urlBuilder.append(part);
-                }
+      public CommandInfo(String url, HttpVerb verb) {
+        this.url = url;
+        this.verb = verb;
+      }
+
+      public HttpMethod getMethod(String base, Command command) {
+        StringBuilder urlBuilder = new StringBuilder(base);
+        for (String part : url.split("/")) {
+          if (part.length() == 0) {
+            continue;
+          }
+
+          urlBuilder.append("/");
+          if (part.startsWith(":")) {
+            String value = get(part.substring(1), command);
+            if (value != null) {
+              urlBuilder.append(get(part.substring(1), command));
             }
-
-
-            return verb.createMethod(urlBuilder.toString());
+          } else {
+            urlBuilder.append(part);
+          }
         }
 
-        @SuppressWarnings("unchecked")
-        private String get(String propertyName, Command command) {
-            if ("sessionId".equals(propertyName))
-                return command.getSessionId().toString();
-            if ("context".equals(propertyName))
-                return command.getContext().toString();
+        return verb.createMethod(urlBuilder.toString());
+      }
 
-            // Attempt to extract the property name from the parameters
-            if (command.getParameters().length > 0 && command.getParameters()[0] instanceof Map) {
-              Object value = ((Map) command.getParameters()[0]).get(propertyName);
-              if (value != null)
-                try {
-                  return URLEncoder.encode(String.valueOf(value), "UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                  // Can never happen. UTF-8 ships with java
-                  return String.valueOf(value);
-                }
-              return null;
-            }
-
-            throw new IllegalArgumentException("Cannot determine property: " + propertyName);
+      @SuppressWarnings("unchecked")
+      private String get(String propertyName, Command command) {
+        if ("sessionId".equals(propertyName)) {
+          return command.getSessionId().toString();
         }
+        if ("context".equals(propertyName)) {
+          return command.getContext().toString();
+        }
+
+        // Attempt to extract the property name from the parameters
+        if (command.getParameters().length > 0 && command.getParameters()[0] instanceof Map) {
+          Object value = ((Map) command.getParameters()[0]).get(propertyName);
+          if (value != null) {
+            try {
+              return URLEncoder.encode(String.valueOf(value), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+              // Can never happen. UTF-8 ships with java
+              return String.valueOf(value);
+            }
+          }
+          return null;
+        }
+
+        throw new IllegalArgumentException("Cannot determine property: " + propertyName);
+      }
     }
 }
