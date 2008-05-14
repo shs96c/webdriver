@@ -1,6 +1,7 @@
 package com.googlecode.webdriver.remote.server;
 
 import com.googlecode.webdriver.WebElement;
+import com.googlecode.webdriver.RenderedWebElement;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +38,14 @@ public class KnownElements {
             }
         };
 
+        Class[] proxyThese;
+        if (element instanceof RenderedWebElement)
+          proxyThese = new Class[] { RenderedWebElement.class, HasId.class };
+        else
+          proxyThese = new Class[] { WebElement.class, HasId.class };
+
         return (WebElement) Proxy.newProxyInstance(element.getClass().getClassLoader(),
-                new Class[] { WebElement.class, HasId.class },
+                proxyThese,
                 handler);
     }
 

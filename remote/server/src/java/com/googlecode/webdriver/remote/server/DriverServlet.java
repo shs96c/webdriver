@@ -56,9 +56,7 @@ public class DriverServlet extends HttpServlet {
         postMapper.bind("/session/:sessionId/:context/visible", SetVisible.class).on(ResultType.SUCCESS, new EmptyResult());
         getMapper.bind("/session/:sessionId/:context/visible", GetVisible.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
-        postMapper.bind("/session/:sessionId/:context/element", FindElement.class)
-            .on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context/element/:element"))
-            .on(ResultType.ERROR, new ErrorJsonResult(":response"));
+        postMapper.bind("/session/:sessionId/:context/element", FindElement.class).on(ResultType.SUCCESS, new RedirectResult("/session/:sessionId/:context/element/:element"));
         getMapper.bind("/session/:sessionId/:context/element/:elementId", DescribeElement.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
         postMapper.bind("/session/:sessionId/:context/elements", FindElements.class).on(ResultType.SUCCESS, new JsonResult(":response"));
@@ -76,6 +74,11 @@ public class DriverServlet extends HttpServlet {
         postMapper.bind("/session/:sessionId/:context/element/:id/selected", SetElementSelected.class).on(ResultType.SUCCESS, new EmptyResult());
         postMapper.bind("/session/:sessionId/:context/element/:id/toggle", ToggleElement.class).on(ResultType.SUCCESS, new JsonResult(":response"));
         getMapper.bind("/session/:sessionId/:context/element/:id/enabled", GetElementEnabled.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+        getMapper.bind("/session/:sessionId/:context/element/:id/displayed", GetElementDisplayed.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+        getMapper.bind("/session/:sessionId/:context/element/:id/location", GetElementLocation.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+        getMapper.bind("/session/:sessionId/:context/element/:id/size", GetElementSize.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+
+        postMapper.bind("/session/:sessionId/:context/element/:id/drag", DragElement.class).on( ResultType.SUCCESS, new EmptyResult());
 
         getMapper.bind("/session/:sessionId/:context/element/:id/:name", GetElementAttribute.class).on(ResultType.SUCCESS, new JsonResult(":response"));
 
@@ -88,6 +91,9 @@ public class DriverServlet extends HttpServlet {
         postMapper.bind("/session/:sessionId/:context/frame/:id", SwitchToFrame.class).on(ResultType.SUCCESS, new EmptyResult());
         postMapper.bind("/session/:sessionId/:context/window/:name", SwitchToWindow.class).on(ResultType.SUCCESS, new EmptyResult());
         deleteMapper.bind("/session/:sessionId/:context/window", CloseWindow.class).on(ResultType.SUCCESS, new EmptyResult());
+
+        getMapper.bind("/session/:sessionId/:context/speed/mouse", GetMouseSpeed.class).on(ResultType.SUCCESS, new JsonResult(":response"));
+        postMapper.bind("/session/:sessionId/:context/speed/mouse", SetMouseSpeed.class).on(ResultType.SUCCESS, new EmptyResult());
     }
 
   @Override

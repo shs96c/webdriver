@@ -14,7 +14,6 @@ import org.json.simple.JSONArray;
 public class FindElement extends WebDriverHandler implements JsonParametersAware {
   private By by;
   private String elementId;
-  private Response response;
 
   public FindElement(DriverSessions sessions) {
         super(sessions);
@@ -37,9 +36,5 @@ public class FindElement extends WebDriverHandler implements JsonParametersAware
 
     public String getElement() {
         return elementId;
-    }
-
-    public Response getResponse() {
-        return response;
     }
 }

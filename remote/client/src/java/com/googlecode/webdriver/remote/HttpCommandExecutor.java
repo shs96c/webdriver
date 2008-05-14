@@ -66,6 +66,9 @@ public class HttpCommandExecutor implements CommandExecutor {
         nameToUrl.put("setElementSelected",  new CommandInfo("/session/:sessionId/:context/element/:id/selected", HttpVerb.POST));
         nameToUrl.put("toggleElement",       new CommandInfo("/session/:sessionId/:context/element/:id/toggle", HttpVerb.POST));
         nameToUrl.put("isElementEnabled",    new CommandInfo("/session/:sessionId/:context/element/:id/enabled", HttpVerb.GET));
+        nameToUrl.put("isElementDisplayed",  new CommandInfo("/session/:sessionId/:context/element/:id/displayed", HttpVerb.GET));
+        nameToUrl.put("getElementLocation",  new CommandInfo("/session/:sessionId/:context/element/:id/location", HttpVerb.GET));
+        nameToUrl.put("getElementSize",      new CommandInfo("/session/:sessionId/:context/element/:id/size", HttpVerb.GET));
 
         nameToUrl.put("getElementAttribute", new CommandInfo("/session/:sessionId/:context/element/:id/:name", HttpVerb.GET));
 
@@ -77,6 +80,11 @@ public class HttpCommandExecutor implements CommandExecutor {
         nameToUrl.put("switchToFrame",  new CommandInfo("/session/:sessionId/:context/frame/:id", HttpVerb.POST));
         nameToUrl.put("switchToWindow", new CommandInfo("/session/:sessionId/:context/window/:name", HttpVerb.POST));
         nameToUrl.put("close",          new CommandInfo("/session/:sessionId/:context/window", HttpVerb.DELETE));
+
+        nameToUrl.put("dragElement",  new CommandInfo("/session/:sessionId/:context/element/:id/drag", HttpVerb.POST));
+
+        nameToUrl.put("getMouseSpeed", new CommandInfo("/session/:sessionId/:context/speed/mouse", HttpVerb.GET));
+        nameToUrl.put("setMouseSpeed", new CommandInfo("/session/:sessionId/:context/speed/mouse", HttpVerb.POST));
     }
 
   public Response execute(Command command) throws Exception {

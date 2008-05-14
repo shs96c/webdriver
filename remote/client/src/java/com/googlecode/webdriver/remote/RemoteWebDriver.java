@@ -10,6 +10,7 @@ import com.googlecode.webdriver.internal.FindsByLinkText;
 import com.googlecode.webdriver.internal.FindsByName;
 import com.googlecode.webdriver.internal.FindsByXPath;
 import com.googlecode.webdriver.internal.ReturnedCookie;
+import com.googlecode.webdriver.internal.OperatingSystem;
 import static com.googlecode.webdriver.remote.MapMaker.map;
 
 import java.lang.reflect.Constructor;
@@ -24,13 +25,21 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     private Capabilities capabilities;
     private SessionId sessionId;
 
+    @SuppressWarnings({"unchecked"})
     public RemoteWebDriver(Capabilities desiredCapabilities) throws Exception {
 		executor = new HttpCommandExecutor();
 
         Response response = execute("newSession", desiredCapabilities);
 
-//        capabilities = new JsonToBeanConverter().convert(DesiredCapabilities.class, rawText);
-        sessionId = new SessionId(response.getSessionId());
+      Map<String, Object> rawCapabilities = (Map<String, Object>) response.getValue();
+      String browser = (String) rawCapabilities.get("browserName");
+      String version = (String) rawCapabilities.get("version");
+      OperatingSystem os = OperatingSystem.valueOf((String) rawCapabilities.get("operatingSystem"));
+
+      DesiredCapabilities returnedCapabilities = new DesiredCapabilities(browser, version, os);
+      returnedCapabilities.setJavascriptEnabled((Boolean) rawCapabilities.get("javascriptEnabled"));
+      capabilities = returnedCapabilities;
+      sessionId = new SessionId(response.getSessionId());
     }
 
     public Capabilities getCapabilities() {
@@ -140,8 +149,7 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
     private WebElement getElementFrom(Response response) {
         try {
             Map<Object, Object> rawResponse = (Map<Object, Object>) response.getValue();
-            RemoteWebElement toReturn = new RemoteWebElement();
-            toReturn.setParent(this);
+            RemoteWebElement toReturn = newRemoteWebElement();
             toReturn.setId(String.valueOf(rawResponse.get("id")));
             return toReturn;
         } catch (Exception e) {
@@ -149,16 +157,25 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
         }
     }
 
-    protected List<WebElement> getElementsFrom(Response response) {
+  private RemoteWebElement newRemoteWebElement() {
+    RemoteWebElement toReturn;
+    if (capabilities.isJavascriptEnabled())
+      toReturn = new RenderedRemoteWebElement();
+    else
+      toReturn = new RemoteWebElement();
+    toReturn.setParent(this);
+    return toReturn;
+  }
+
+  protected List<WebElement> getElementsFrom(Response response) {
         List<WebElement> toReturn = new ArrayList<WebElement>();
         List<String> urls = (List<String>) response.getValue();
         for (String url : urls) {
             // We cheat here, because we know that the URL for an element ends with its ID.
             // This is lazy and bad. We should, instead, go to each of the URLs in turn.
             String[] parts = url.split("/");
-            RemoteWebElement element = new RemoteWebElement();
+            RemoteWebElement element = newRemoteWebElement();
             element.setId(parts[parts.length - 1]);
-            element.setParent(this);
             toReturn.add(element);
         }
 
@@ -207,19 +224,23 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
           List<Map> elements = (List<Map>) rawException.get("stackTrace");
           StackTraceElement[] trace = new StackTraceElement[elements.size()];
 
+          int lastInsert = 0;
           for (int i = 0; i < elements.size(); i++) {
             Map values = (Map) elements.get(i);
 
             // I'm so sorry.
-            long lineNumber = (Long) values.get("lineNumber");
+            Long lineNumber = (Long) values.get("lineNumber");
+            if (lineNumber == null)
+              continue;
 
-            trace[i] = new StackTraceElement((String) values.get("className"),
+            trace[lastInsert++] = new StackTraceElement((String) values.get("className"),
                                              (String) values.get("methodName"),
                                              (String) values.get("fileName"),
-                                             (int) lineNumber);
+                                             (int) (long) lineNumber);
           }
 
-          toThrow.setStackTrace(trace);
+          if (lastInsert == elements.size())
+            toThrow.setStackTrace(trace);
         } catch (Exception e) {
           toThrow = new RuntimeException(e);
         }
@@ -271,12 +292,13 @@ public class RemoteWebDriver implements WebDriver, FindsById, FindsByLinkText, F
       }
 
       public Speed getMouseSpeed() {
-        throw new UnsupportedOperationException("getMouseSpeed");
+        Response response = execute("getMouseSpeed");
+
+        return Speed.valueOf((String) response.getValue());
       }
 
       public void setMouseSpeed(Speed speed) {
-        throw new UnsupportedOperationException("setMouseSpeed");
-
+        execute("setMouseSpeed", speed);
       }
     }
 

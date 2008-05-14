@@ -8,9 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RemoteWebElement implements WebElement {
-    private String id;
-    private RemoteWebDriver parent;
-
+    protected String id;
+    protected RemoteWebDriver parent;
 
     public void setParent(RemoteWebDriver parent) {
         this.parent = parent;
