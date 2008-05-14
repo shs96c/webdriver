@@ -96,9 +96,6 @@ private Map convertObjectToMap(Map jsonObject) {
         T t = clazz.newInstance();
         PropertyDescriptor[] allProperties = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
         for (PropertyDescriptor property : allProperties) {
-            if ("class".equals(property.getName()))
-                continue;
-
             Object value = toConvert.get(property.getName());
 
             Method write = property.getWriteMethod();

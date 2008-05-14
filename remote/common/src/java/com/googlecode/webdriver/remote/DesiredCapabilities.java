@@ -62,6 +62,10 @@ public class DesiredCapabilities implements Capabilities {
         return new DesiredCapabilities("htmlunit", "", OperatingSystem.ANY);
     }
 
+    static DesiredCapabilities safari() {
+        return new DesiredCapabilities("safari", "", OperatingSystem.MAC);
+    }
+
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof DesiredCapabilities)) return false;

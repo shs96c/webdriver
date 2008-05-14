@@ -12,18 +12,23 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class BeanToJsonConverter {
+    private final static int MAX_DEPTH = 8;
+
     public String convert(Object toConvert) throws Exception {
-        Object returned = realConvert(toConvert);
+        Object returned = realConvert(toConvert, MAX_DEPTH);
         return returned == null ? null : returned.toString();
     }
 
     @SuppressWarnings("unchecked")
-	private Object realConvert(Object toConvert) throws Exception {
+    private Object realConvert(Object toConvert, int maxDepth) throws Exception {
+        if (maxDepth < 1)
+          return null;
+
         if (toConvert == null)
             return null;
 
         if (toConvert.getClass().isArray())
-            return convertArray(toConvert);        
+            return convertArray(toConvert, maxDepth - 1);
 
         // Assume that strings have already been converted
         if (isPrimitiveType(toConvert))
@@ -34,15 +39,15 @@ public class BeanToJsonConverter {
         }
 
         if (toConvert instanceof Map)
-            return convertMap((Map) toConvert);
+            return convertMap((Map) toConvert, maxDepth - 1);
 
         if (toConvert instanceof Collection)
-            return convertCollection((Collection) toConvert);
+            return convertCollection((Collection) toConvert, maxDepth - 1);
 
         if (toConvert.getClass().isEnum() || toConvert instanceof Enum)
             return toConvert.toString();
 
-        return convertBean(toConvert);
+        return convertBean(toConvert, maxDepth - 1);
     }
 
     // I'm missing something really obvious
@@ -81,40 +86,42 @@ public class BeanToJsonConverter {
     }
 
     @SuppressWarnings("unchecked")
-	private Object convertCollection(Collection collection) throws Exception {
+	private Object convertCollection(Collection collection, int maxDepth) throws Exception {
         JSONArray json = new JSONArray();
 
         if (collection == null)
             return json;
 
         for (Object o : collection) {
-            json.add(realConvert(o));
+            json.add(realConvert(o, maxDepth));
         }
 
         return json;
     }
 
     @SuppressWarnings("unchecked")
-	private Object convertArray(Object array) throws Exception {
+	private Object convertArray(Object array, int maxDepth) throws Exception {
         JSONArray json = new JSONArray();
 
         int length = Array.getLength(array);
         for (int i = 0; i < length; i++) {
-            json.add(realConvert(Array.get(array, i)));
+            json.add(realConvert(Array.get(array, i), maxDepth - 1));
         }
 
         return json;
     }
 
     @SuppressWarnings("unchecked")
-	private Object convertBean(Object toConvert) throws Exception {
+	private Object convertBean(Object toConvert, int maxDepth) throws Exception {
         JSONObject json = new JSONObject();
 
         BeanInfo beanInfo = Introspector.getBeanInfo(toConvert.getClass());
         PropertyDescriptor[] allProperties = beanInfo.getPropertyDescriptors();
         for (PropertyDescriptor property : allProperties) {
-            if ("class".equals(property.getName()))
+            if ("class".equals(property.getName())) {
+                json.put("class", toConvert.getClass().getName());
                 continue;
+            }
 
             Method read = property.getReadMethod();
             if (read == null)
@@ -122,7 +129,7 @@ public class BeanToJsonConverter {
 
             try {
                 Object result = read.invoke(toConvert);
-                json.put(property.getName(), realConvert(result));
+                json.put(property.getName(), realConvert(result, maxDepth - 1));
             } catch (Exception e) {
                 // Skip this property
             }
@@ -132,11 +139,11 @@ public class BeanToJsonConverter {
     }
 
     @SuppressWarnings("unchecked")
-	private Object convertMap(Map map) throws Exception {
+	private Object convertMap(Map map, int maxDepth) throws Exception {
         JSONObject json = new JSONObject();
         for (Object rawEntry : map.entrySet()) {
             Map.Entry entry = (Map.Entry) rawEntry;
-            json.put(entry.getKey(), realConvert(entry.getValue()));
+            json.put(entry.getKey(), realConvert(entry.getValue(), maxDepth - 1));
         }
 
         return json;

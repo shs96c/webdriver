@@ -9,6 +9,8 @@ import org.json.simple.parser.JSONParser;
 
 import java.io.StringReader;
 import java.util.*;
+import java.util.List;
+import java.awt.*;
 
 
 public class BeanToJsonConverterTest extends TestCase {
@@ -79,7 +81,17 @@ public class BeanToJsonConverterTest extends TestCase {
 
         assertFalse(emptyString.equals(nullValue));
     }
-    
+
+    public void testShouldBeAbleToConvertAPoint() throws Exception {
+      Point point = new Point(65, 75);
+
+      try {
+        new BeanToJsonConverter().convert(point);
+      } catch (StackOverflowError e) {
+        fail("This should never happen");
+      }
+    }
+
     private static class SimpleBean {
         public String getFoo() {
             return "bar";
