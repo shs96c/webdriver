@@ -22,29 +22,30 @@ public:
 	bool getVisible();
 	void setVisible(bool isShown);
 
-	const wchar_t* getCurrentUrl();
+	std::wstring getCurrentUrl();
 
-	const std::wstring getTitle();
+	std::wstring getTitle();
 	void get(const wchar_t* url);
 	void goForward();
 	void goBack();
 
 	ElementWrapper* selectElementById(const wchar_t *elementId);
 	ElementWrapper* selectElementByLink(const wchar_t *elementLink);
-	IHTMLDocument2* getDocument();
+	ElementWrapper* selectElementByName(const wchar_t *elementName);
+	void getDocument(IHTMLDocument2 **pdoc);
 
 	void waitForNavigateToFinish();
 	void switchToFrame(int frameIndex);
 
-	const wchar_t* getCookies();
+	std::wstring getCookies();
 	void addCookie(const wchar_t *cookieString);
 
-	void bringToFront();
+	HWND bringToFront();
 
 private:
 	void waitForDocumentToComplete(IHTMLDocument2* doc);
 	IeEventSink* sink;
-	IHTMLDocument3* getDocument3();
+	void getDocument3(IHTMLDocument3 **pdoc);
 	CComQIPtr<IWebBrowser2, &__uuidof(IWebBrowser2)> ie;
 	long currentFrame;
 

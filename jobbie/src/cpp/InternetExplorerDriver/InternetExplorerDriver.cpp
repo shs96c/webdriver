@@ -24,9 +24,10 @@ InternetExplorerDriver::InternetExplorerDriver()
 		throw "Cannot create InternetExplorer instance";
 	}
 
+	closeCalled = false;
 	currentFrame = -1;
 
-	closeCalled = false;
+	bringToFront();
 //	sink = new IeEventSink(ie);
 }
 
@@ -65,28 +66,26 @@ void InternetExplorerDriver::setVisible(bool isVisible)
 		ie->put_Visible(VARIANT_FALSE);
 }
 
-const wchar_t* InternetExplorerDriver::getCurrentUrl() 
+std::wstring InternetExplorerDriver::getCurrentUrl()
 {
-	IHTMLDocument2* doc = getDocument();
+	CComPtr<IHTMLDocument2> doc;
+	getDocument(&doc);
 
 	if (!doc) {
-		wchar_t* toReturn = new wchar_t[2];
-		wcscpy_s(toReturn, 1, L"");
-		return toReturn;
+		return L"";
 	}
+
 	CComBSTR url;
 	doc->get_URL(&url);
-	doc->Release();
-
-	return bstr2wchar(url);
+	return bstr2wstring(url);
 }
 
-const std::wstring InternetExplorerDriver::getTitle() 
+std::wstring InternetExplorerDriver::getTitle()
 {
+	CComPtr<IHTMLDocument2> doc;
+	getDocument(&doc);
 	CComBSTR title;
-	IHTMLDocument2 *doc = getDocument();
 	doc->get_title(&title);
-	doc->Release();
 
 	return bstr2wstring(title);
 }
@@ -113,20 +112,65 @@ void InternetExplorerDriver::goBack()
 
 ElementWrapper* InternetExplorerDriver::selectElementById(const wchar_t *elementId) 
 {
-	IHTMLDocument3 *doc = getDocument3();
+	CComPtr<IHTMLDocument3> doc;
+	getDocument3(&doc);
+
 	IHTMLElement* element = NULL;
 	BSTR id = SysAllocString(elementId);
 	doc->getElementById(id, &element);
-	doc->Release();
 	SysFreeString(id);
 	
 	if (element != NULL) {
-		IHTMLDOMNode* node = NULL;
-		element->QueryInterface(__uuidof(IHTMLDOMNode), (void **)&node);
-		element->Release();
-		ElementWrapper* toReturn = new ElementWrapper(this, node);
-		node->Release();
-		return toReturn;
+		CComVariant value;
+		element->getAttribute(CComBSTR(L"id"), 0, &value);
+		std::wstring converted = variant2wchar(value);
+		if (converted == elementId)
+		{
+			IHTMLDOMNode* node = NULL;
+			element->QueryInterface(__uuidof(IHTMLDOMNode), (void **)&node);
+			element->Release();
+			ElementWrapper* toReturn = new ElementWrapper(this, node);
+			node->Release();
+
+			return toReturn;
+		}
+
+		CComPtr<IHTMLDocument2> doc2;
+		getDocument(&doc2);
+
+		CComPtr<IHTMLElementCollection> allNodes;
+		doc2->get_all(&allNodes);
+		long length = 0;
+		CComPtr<IUnknown> unknown;
+		allNodes->get__newEnum(&unknown);
+		CComQIPtr<IEnumVARIANT> enumerator(unknown);
+
+		VARIANT var;
+		VariantInit(&var);
+		enumerator->Next(1, &var, NULL);
+		IDispatch *disp;
+		disp = V_DISPATCH(&var);
+
+		while (disp) 
+		{
+			CComQIPtr<IHTMLElement> curr(disp);
+			disp->Release();
+			if (curr) 
+			{
+				CComVariant value;
+				curr->getAttribute(CComBSTR(L"id"), 0, &value);
+				std::wstring converted = variant2wchar(value);
+				if (elementId == converted) 
+				{
+					CComQIPtr<IHTMLDOMNode> node(curr);
+					return new ElementWrapper(this, node);
+				}
+			}
+
+			VariantInit(&var);
+			enumerator->Next(1, &var, NULL);
+			disp = V_DISPATCH(&var);
+		}
 	}
 
 	throw "Cannot find element";
@@ -134,11 +178,11 @@ ElementWrapper* InternetExplorerDriver::selectElementById(const wchar_t *element
 
 ElementWrapper* InternetExplorerDriver::selectElementByLink(const wchar_t *elementLink)
 {
-	IHTMLDocument2 *doc = getDocument();
-	IHTMLElementCollection* linkCollection;
+	CComPtr<IHTMLDocument2> doc;
+	getDocument(&doc);
+	CComPtr<IHTMLElementCollection> linkCollection;
 	doc->get_links(&linkCollection);
-	doc->Release();
-
+	
 	long linksLength;
 	linkCollection->get_length(&linksLength);
 
@@ -146,39 +190,62 @@ ElementWrapper* InternetExplorerDriver::selectElementByLink(const wchar_t *eleme
 		VARIANT idx;
 		idx.vt = VT_I4;
 		idx.lVal = i;
-		IDispatch* dispatch;
 		VARIANT zero;
 		zero.vt = VT_I4;
 		zero.lVal = 0;
+		CComPtr<IDispatch> dispatch;
 		linkCollection->item(idx, zero, &dispatch);
-		VariantClear(&idx);
-		VariantClear(&zero);
 
-		IHTMLElement* element;
-		dispatch->QueryInterface(__uuidof(IHTMLElement), (void**)&element);
-		dispatch->Release();
+		CComQIPtr<IHTMLElement> element(dispatch);
 
-		BSTR linkText;
+		CComBSTR linkText;
 		element->get_innerText(&linkText);
 
-		const wchar_t *converted = bstr2wchar(linkText);
-		SysFreeString(linkText);
-
-		if (wcscmp(elementLink, converted) == 0) {
-			delete converted;
-			IHTMLDOMNode* linkNode;
-			element->QueryInterface(__uuidof(IHTMLDOMNode), (void**)&linkNode);
-			element->Release();
-			linkCollection->Release();
-			ElementWrapper* toReturn = new ElementWrapper(this, linkNode);
-			linkNode->Release();
-			return toReturn;
+		std::wstring converted = bstr2wstring(linkText);
+		if (converted == elementLink) {
+			CComQIPtr<IHTMLDOMNode> linkNode(element);
+			return new ElementWrapper(this, linkNode);
 		}
-		delete converted;
-		element->Release();
 	}
-	linkCollection->Release();
-    throw "Cannot find element";
+
+	throw "Cannot find element";
+}
+
+ElementWrapper* InternetExplorerDriver::selectElementByName(const wchar_t *elementName) 
+{
+	CComPtr<IHTMLDocument3> doc;
+	getDocument3(&doc);
+
+	CComPtr<IHTMLElementCollection> elementCollection;
+	CComBSTR name = SysAllocString(elementName);
+	doc->getElementsByName(name, &elementCollection);
+	
+	long elementsLength;
+	elementCollection->get_length(&elementsLength);
+
+	for (int i = 0; i < elementsLength; i++) {
+		VARIANT idx;
+		idx.vt = VT_I4;
+		idx.lVal = i;
+		VARIANT zero;
+		zero.vt = VT_I4;
+		zero.lVal = 0;
+		CComPtr<IDispatch> dispatch;
+		elementCollection->item(idx, zero, &dispatch);
+
+		CComQIPtr<IHTMLElement> element(dispatch);
+
+		CComBSTR nameText;
+		CComVariant value;
+		element->getAttribute(CComBSTR(L"name"), 0, &value);
+		std::wstring converted = variant2wchar(value);
+		if (converted == elementName) {
+			CComQIPtr<IHTMLDOMNode> elementNode(element);
+			return new ElementWrapper(this, elementNode);
+		}
+	}
+
+	throw "Cannot find element";
 }
 
 void InternetExplorerDriver::waitForNavigateToFinish() 
@@ -239,20 +306,16 @@ void InternetExplorerDriver::waitForNavigateToFinish()
 
 void InternetExplorerDriver::waitForDocumentToComplete(IHTMLDocument2* doc)
 {
-	BSTR state;
+	CComBSTR state;
 	doc->get_readyState(&state);
-	wchar_t* currentState = bstr2wchar(state);
+	std::wstring currentState = bstr2wstring(state);
 
-	while (wcscmp(L"complete", currentState) != 0) {
+	while (currentState != L"complete") {
 		Sleep(50);
-		SysFreeString(state);
-		delete currentState;
+		state.Empty();
 		doc->get_readyState(&state);
-		currentState = bstr2wchar(state);
+		currentState = bstr2wstring(state);
 	}
-
-	SysFreeString(state);
-	delete currentState;
 }
 
 void InternetExplorerDriver::switchToFrame(int frameIndex) 
@@ -260,35 +323,30 @@ void InternetExplorerDriver::switchToFrame(int frameIndex)
 	currentFrame = frameIndex;
 }
 
-const wchar_t* InternetExplorerDriver::getCookies()
+std::wstring InternetExplorerDriver::getCookies()
 {
-	IHTMLDocument2 *doc = getDocument();
-
+	CComPtr<IHTMLDocument2> doc;
+	getDocument(&doc);
 	if (!doc) {
-		wchar_t* toReturn = new wchar_t[2];
-		wcscpy_s(toReturn, 1, L"");
-		return toReturn;
+		return L"";
 	}
 
-	BSTR cookie;
+	CComBSTR cookie;
 	doc->get_cookie(&cookie);
 
-	doc->Release();
-	return bstr2wchar(cookie);
+	return bstr2wstring(cookie);
 }
 
 void InternetExplorerDriver::addCookie(const wchar_t *cookieString)
 {
-	IHTMLDocument2 *doc = getDocument();
-	BSTR cookie = SysAllocString(cookieString);
+	CComPtr<IHTMLDocument2> doc;
+	getDocument(&doc);
+	CComBSTR cookie(cookieString);
 
 	doc->put_cookie(cookie);
-
-	SysFreeString(cookie);
-	doc->Release();
 }
 
-void InternetExplorerDriver::bringToFront() 
+HWND InternetExplorerDriver::bringToFront() 
 {
 	setVisible(true);
 	HWND hWnd;
@@ -308,73 +366,76 @@ void InternetExplorerDriver::bringToFront()
     {
 		AttachThreadInput(currThreadId, ieWinThreadId, false);
     }
+
+	return hWnd;
 }
 
-IHTMLDocument2* InternetExplorerDriver::getDocument() 
+void InternetExplorerDriver::getDocument(IHTMLDocument2 **pdoc)
 {
-	IDispatch* dispatch;
-	if (!SUCCEEDED(ie->get_Document(&dispatch))) {
-		return NULL;
+	CComPtr<IDispatch> dispatch;
+	ie->get_Document(&dispatch);
+	
+	if (!dispatch) {
+		return;
 	}
 
-	IHTMLDocument2* doc = NULL;
-	dispatch->QueryInterface(__uuidof(IHTMLDocument2), (void**)&doc);
-	dispatch->Release();
-
+	CComQIPtr<IHTMLDocument2> doc(dispatch);
 	CComQIPtr<IHTMLFramesCollection2> frames;
 	doc->get_frames(&frames);
+
+	if (frames == NULL) {
+		*pdoc = doc.Detach();
+		return;
+	}
 
 	long length = 0;
 	frames->get_length(&length);
 
 	if (!length) {
 		currentFrame = -1;
-		return doc;
+		*pdoc = doc.Detach();
+		return;
 	}
 
 	if (currentFrame == -1) {
-		IHTMLDocument3* doc3 = getDocument3();
-		IHTMLElementCollection* bodyTags;
+		CComPtr<IHTMLDocument3> doc3;
+		getDocument3(&doc3);
 
-		BSTR bodyTagName = SysAllocString(L"BODY");
+		CComPtr<IHTMLElementCollection> bodyTags;
+		CComBSTR bodyTagName(L"BODY");
 		doc3->getElementsByTagName(bodyTagName, &bodyTags);
-		SysFreeString(bodyTagName);
 
 		long numberOfBodyTags = 0;
 		bodyTags->get_length(&numberOfBodyTags);
 	
-		if (numberOfBodyTags)
-			return doc;
+		if (numberOfBodyTags) {
+			*pdoc = doc.Detach();
+			return;
+		}
 
 		currentFrame = 0;
 	}
 
 	VARIANT index;
-	VariantInit(&index);
 	index.vt = VT_I4;
 	index.lVal = currentFrame;
-	VARIANT result;
-	VariantInit(&result);
+	CComVariant result;
 	frames->item(&index, &result);
-	VariantClear(&index);
 
-	CComQIPtr<IHTMLWindow2, &__uuidof(IHTMLWindow2)> win;
-	win = result.pdispVal;
-	VariantClear(&result);
-
+	CComQIPtr<IHTMLWindow2> win(result.pdispVal);
 	// Clear the reference to the top frame's doc reference and return the frame's
-	doc->Release();
+	doc.Release();
 	win->get_document(&doc);
-	return doc;
+	*pdoc = doc.Detach();
 }
 
-IHTMLDocument3* InternetExplorerDriver::getDocument3() 
+void InternetExplorerDriver::getDocument3(IHTMLDocument3 **pdoc)
 {
-	CComPtr<IDispatch> dispatch = NULL;
+	CComPtr<IDispatch> dispatch;
 	ie->get_Document(&dispatch);
-	IHTMLDocument3* doc = NULL;
-	dispatch->QueryInterface(__uuidof(IHTMLDocument3), (void**)&doc);
-	return doc;
+
+	CComQIPtr<IHTMLDocument3> doc(dispatch);
+	*pdoc = doc.Detach();
 }
 
 IeEventSink::IeEventSink(IWebBrowser2* ie) 

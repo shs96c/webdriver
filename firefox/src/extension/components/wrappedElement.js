@@ -1,159 +1,200 @@
-FirefoxDriver.prototype.click = function(respond, position) {
-    var element = Utils.getElementAt(position, this.context);
+FirefoxDriver.prototype.click = function(respond) {
+    respond.context = this.context;
+
+    var element = Utils.getElementAt(respond.elementId, this.context);
     if (!element) {
-        respond(this.context, "click");
+        respond.send();
         return;
     }
 
     // Attach a listener so that we can wait until any page load this causes to complete
     var driver = this;
-    var server = this.server;
     var alreadyReplied = false;
-    var clickListener = new WebLoadingListener(this, function(event) {
+    var browser = Utils.getBrowser(driver.context);
+    var contentWindow = Utils.getBrowser(driver.context).contentWindow;
+    var fireMouseEventOn = Utils.fireMouseEventOn;
+
+    var clickListener = new WebLoadingListener(driver, function(event) {
         if (!alreadyReplied) {
             alreadyReplied = true;
-            respond(driver.context, "click");
+            respond.send();
         }
     });
 
-    element.focus();
-    Utils.fireMouseEventOn(this.context, element, "mousedown");
+    var clickEvents = function() {
+        element.focus();
 
-    // Now do the click
-    if (element["click"]) {
-        element.click();
-    } else {
-        // Send the mouse event too. Not sure if this will cause the thing to be double clicked....
-        Utils.fireMouseEventOn(this.context, element, "click");
-    }
+        fireMouseEventOn(driver.context, element, "mousedown");
+        fireMouseEventOn(driver.context, element, "mouseup");
 
-    Utils.fireMouseEventOn(this.context, element, "mouseup");
-    var browser = Utils.getBrowser(this.context);
+        // Now do the click. I'm a little surprised that this works as often as it does:
+        // http://developer.mozilla.org/en/docs/DOM:element.click#Notes
+        if (element["click"]) {
+            element.click();
+        } else {
+            // Send the mouse event too. Not sure if this will cause the thing to be double clicked....
+            fireMouseEventOn(driver.context, element, "click");
+        }
 
-    var checkForLoad = function() {
-        // Returning should be handled by the click listener, unless we're not actually loading something. Do a check and return if we are.
-        // There's a race condition here, in that the click event and load may have finished before we get here. For now, let's pretend that
-        // doesn't happen. The other race condition is that we make this check before the load has begun. With all the javascript out there,
-        // this might actually be a bit of a problem.
-        var docLoaderService = Utils.getBrowser(driver.context).webProgress
-        if (!docLoaderService.isLoadingDocument) {
-            WebLoadingListener.removeListener(browser, clickListener);
-            if (!alreadyReplied) {
-                alreadyReplied = true;
-                respond(driver.context, "click");
+        var checkForLoad = function() {
+            // Returning should be handled by the click listener, unless we're not actually loading something. Do a check and return if we are.
+            // There's a race condition here, in that the click event and load may have finished before we get here. For now, let's pretend that
+            // doesn't happen. The other race condition is that we make this check before the load has begun. With all the javascript out there,
+            // this might actually be a bit of a problem.
+            var docLoaderService = browser.webProgress
+            if (!docLoaderService.isLoadingDocument) {
+                WebLoadingListener.removeListener(browser, clickListener);
+                if (!alreadyReplied) {
+                    alreadyReplied = true;
+                    respond.send();
+                }
             }
         }
+        contentWindow.setTimeout(checkForLoad, 50);
     }
 
-    Utils.getBrowser(this.context).contentWindow.setTimeout(checkForLoad, 50);
+    contentWindow.setTimeout(clickEvents, 50);
 };
 
-FirefoxDriver.prototype.getElementText = function(respond, elementId) {
-    var element = Utils.getElementAt(elementId, this.context);
+FirefoxDriver.prototype.getElementText = function(respond) {
+    respond.context = this.context;
+
+    var element = Utils.getElementAt(respond.elementId, this.context);
     if (element.tagName == "TITLE") {
-        respond(this.context, "getElementText", Utils.getBrowser(this.context).contentTitle);
+        respond.response = Utils.getBrowser(this.context).contentTitle;
     } else {
-        respond(this.context, "getElementText", Utils.getText(element, true));
+        respond.response = Utils.getText(element, true);
     }
+
+    respond.send();
 }
 
-FirefoxDriver.prototype.getElementValue = function(respond, value) {
-    var element = Utils.getElementAt(value, this.context);
+FirefoxDriver.prototype.getElementValue = function(respond) {
+    respond.context = this.context;
+
+    var element = Utils.getElementAt(respond.elementId, this.context);
 
     if (element["value"] !== undefined) {
-        respond(this.context, "getElementValue", "OK\n" + element.value);
+        respond.response = element.value;
+        respond.send();
         return;
     }
 
     if (element.hasAttribute("value")) {
-        respond(this.context, "getElementValue", "OK\n" + element.getAttribute("value"));
+        respond.response = element.getAttribute("value");
+        respond.send();
         return;
     }
 
-    respond(this.context, "getElementValue", "No match\n");
+    respond.isError = true;
+    respond.response = "No match";
+    respond.send();
 };
 
-FirefoxDriver.prototype.setElementValue = function(respond, value) {
-    var spaceIndex = value.indexOf(" ");
-    var element = Utils.getElementAt(value.substring(0, spaceIndex), this.context);
-    spaceIndex = value.indexOf(" ", spaceIndex);
-    var newValue = value.substring(spaceIndex + 1);
+FirefoxDriver.prototype.sendKeys = function(respond, value) {
+    respond.context = this.context;
+
+    var element = Utils.getElementAt(respond.elementId, this.context);
 
     element.focus();
-    Utils.type(this.context, element, newValue);
+    Utils.type(this.context, element, value[0]);
     element.blur();
 
-    respond(this.context, "setElementValue");
+    respond.context = this.context;
+    respond.send();
 };
 
+FirefoxDriver.prototype.clear = function(respond) {
+   respond.context = this.context;
+
+   var element = Utils.getElementAt(respond.elementId, this.context);
+   var isTextField = element["value"] !== undefined;
+
+   if (isTextField) {
+     element.value = "";
+   } else {
+     element.setAttribute("value", "");
+   }
+   
+   respond.send();
+}
+
 FirefoxDriver.prototype.getElementAttribute = function(respond, value) {
-    var spaceIndex = value.indexOf(" ");
-    var element = Utils.getElementAt(value.substring(0, spaceIndex), this.context);
-    spaceIndex = value.indexOf(" ", spaceIndex);
-    var attributeName = value.substring(spaceIndex + 1);
+    var element = Utils.getElementAt(respond.elementId, this.context);
+    var attributeName = value[0];
 
     if (element.hasAttribute(attributeName)) {
-        var response = element.getAttribute(attributeName);
+        respond.response = element.getAttribute(attributeName);
 
         if (attributeName.toLowerCase() == "disabled") {
-            response = element.disabled;
+            respond.response = element.disabled;
         } else if (attributeName.toLowerCase() == "selected") {
-            response = element.selected;
+            respond.response = element.selected;
         } else if (attributeName.toLowerCase() == "checked") {
-            response = response.toLowerCase() == "checked" || response.toLowerCase() == "true";
+            respond.response = response.toLowerCase() == "checked" || response.toLowerCase() == "true";
         }
 
-        respond(this.context, "getElementAttribute", "OK\n" + response);
+        respond.send();
         return;
     }
 
     attributeName = attributeName.toLowerCase();
+
     if (attributeName == "disabled") {
-        respond(this.context, "getElementAttribute", "OK\n" + element.disabled);
+        respond.response = element.disabled;
+        respond.send();
         return;
     } else if (attributeName == "checked" && element.tagName.toLowerCase() == "input") {
-        respond(this.context, "getElementAttribute", "OK\n" + element.checked);
+        respond.response = element.checked;
+        respond.send();
         return;
     } else if (attributeName == "selected" && element.tagName.toLowerCase() == "option") {
-        respond(this.context, "getElementAttribute", "OK\n" + element.selected);
+        respond.response = element.selected;
+        respond.send();
         return;
     }
 
-    respond(this.context, "getElementAttribute", "No match");
+    respond.isError = true;
+    respond.response = "No match";
+    respond.send();
 }
 
-FirefoxDriver.prototype.submitElement = function(respond, elementId) {
-    var element = Utils.getElementAt(elementId, this.context);
+FirefoxDriver.prototype.submitElement = function(respond) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
 
     var submitElement = Utils.findForm(element);
     if (submitElement) {
         var driver = this;
         new WebLoadingListener(this, function(event) {
-            respond(driver.context, "submitElement");
+            respond.context = driver.context;
+            respond.send();
         });
         if (submitElement["submit"])
             submitElement.submit();
         else
             submitElement.click();
     } else {
-        respond(this.context, "submitElement");
+        respond.context = this.context;
+        respond.send();
     }
 }
 
-FirefoxDriver.prototype.getElementChildren = function(respond, elementIdAndTagName) {
-    var parts = elementIdAndTagName.split(" ");
-    var element = Utils.getElementAt(parts[0], this.context);
+FirefoxDriver.prototype.getElementChildren = function(respond, name) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
 
-    var children = element.getElementsByTagName(parts[1]);
+    var children = element.getElementsByTagName(name[0]);
     var response = "";
     for (var i = 0; i < children.length; i++) {
         response += Utils.addToKnownElements(children[i], this.context) + " ";
     }
-    respond(this.context, "getElementChildren", response);
+
+    respond.context = this.context;
+    respond.response = response;
+    respond.send();
 }
 
-FirefoxDriver.prototype.getElementSelected = function(respond, elementId) {
-    var element = Utils.getElementAt(elementId, this.context);
+FirefoxDriver.prototype.getElementSelected = function(respond) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
     var selected = false;
 
     try {
@@ -170,17 +211,23 @@ FirefoxDriver.prototype.getElementSelected = function(respond, elementId) {
     } catch(e) {
     }
 
-    respond(this.context, "getElementSelected", selected);
+    respond.context = this.context;
+    respond.response = selected;
+    respond.send();
 }
 
-FirefoxDriver.prototype.setElementSelected = function(respond, elementId) {
-    var element = Utils.getElementAt(elementId, this.context);
+FirefoxDriver.prototype.setElementSelected = function(respond) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
+
     var wasSet = "You may not select an unselectable element";
+    respond.context = this.context;
+    respond.isError = true;
 
     try {
         var inputElement = element.QueryInterface(Components.interfaces.nsIDOMHTMLInputElement)
         if (inputElement.disabled) {
-            respond(this.context, "setElementSelected", "You may not select a disabled element");
+            respond.response = "You may not select a disabled element";
+            respond.send();
             return;
         }
     } catch(e) {
@@ -188,6 +235,7 @@ FirefoxDriver.prototype.setElementSelected = function(respond, elementId) {
 
     try {
         var option = element.QueryInterface(Components.interfaces.nsIDOMHTMLOptionElement)
+        respond.isError = false;
         if (!option.selected) {
             option.selected = true;
             Utils.fireHtmlEvent(this.context, option, "change");
@@ -198,6 +246,7 @@ FirefoxDriver.prototype.setElementSelected = function(respond, elementId) {
 
     try {
         var checkbox = element.QueryInterface(Components.interfaces.nsIDOMHTMLInputElement)
+        respond.isError = false;
         if (checkbox.type == "checkbox" || checkbox.type == "radio") {
             if (!checkbox.checked) {
                 checkbox.checked = true;
@@ -208,18 +257,21 @@ FirefoxDriver.prototype.setElementSelected = function(respond, elementId) {
     } catch(e) {
     }
 
-    respond(this.context, "setElementSelected", wasSet);
+    respond.response = wasSet;
+    respond.send();
 }
 
-FirefoxDriver.prototype.toggleElement = function(respond, elementId) {
-    var element = Utils.getElementAt(elementId, this.context);
+FirefoxDriver.prototype.toggleElement = function(respond) {
+    respond.context = this.context;
+
+    var element = Utils.getElementAt(respond.elementId, this.context);
 
     try {
         var checkbox = element.QueryInterface(Components.interfaces.nsIDOMHTMLInputElement);
         if (checkbox.type == "checkbox") {
             checkbox.checked = !checkbox.checked;
             Utils.fireHtmlEvent(this.context, checkbox, "change");
-            respond(this.context, "toggleElement");
+            respond.send();
             return;
         }
     } catch(e) {
@@ -237,69 +289,162 @@ FirefoxDriver.prototype.toggleElement = function(respond, elementId) {
         if (select && select.multiple) {
             option.selected = !option.selected;
             Utils.fireHtmlEvent(this.context, option, "change");
-            respond(this.context, "toggleElement");
+            respond.send();
             return;
         }
     } catch(e) {
     }
 
-    respond(this.context, "toggleElement", "You may only toggle an element that is either a checkbox or an option in a select that allows multiple selections");
+    respond.isError = true;
+    respond.response = "You may only toggle an element that is either a checkbox or an option in a select that allows multiple selections";
+    respond.send();
 };
 
-FirefoxDriver.prototype.isElementDisplayed = function(respond, elementId) {
-    var element = Utils.getElementAt(elementId, this.context);
+FirefoxDriver.prototype.isElementDisplayed = function(respond) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
 
-    var display = Utils.getStyleProperty(element, "display");
-    var visible = Utils.getStyleProperty(element, "visibility");
+    var isDisplayed = true;
+    do {
+        var display = Utils.getStyleProperty(element, "display");
+        var visible = Utils.getStyleProperty(element, "visibility");
+        isDisplayed &= display != "none" && visible != "hidden";
 
-    respond(this.context, "isElementDisplayed", display != "none" && visible != "hidden");
+        element = element.parentNode;
+    } while (element.tagName.toLowerCase() != "body" && isDisplayed);
+
+    respond.context = this.context;
+    respond.response = isDisplayed ? "true" : "false";
+    respond.send();
 };
 
-FirefoxDriver.prototype.getElementLocation = function(respond, elementId) {
-    var element = Utils.getElementAt(elementId, this.context);
+FirefoxDriver.prototype.getElementLocation = function(respond) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
+    var location = Utils.getElementLocation(element, this.context);
 
-    var x = element.offsetLeft;
-    var y = element.offsetTop;
-    var elementParent = element.offsetParent;
-
-    while (elementParent != null) {
-        if(elementParent.tagName == "TABLE") {
-            var parentBorder = parseInt(elementParent.border);
-            if(isNaN(parentBorder)) {
-                var parentFrame = elementParent.getAttribute('frame');
-                if(parentFrame != null) {
-                    x += 1;
-                    y += 1;
-                }
-            } else if(parentBorder > 0) {
-                x += parentBorder;
-                y += parentBorder;
-            }
-        }
-        x += elementParent.offsetLeft;
-        y += elementParent.offsetTop;
-        elementParent = elementParent.offsetParent;
-    }
-
-    // Netscape can get confused in some cases, such that the height of the parent is smaller
-    // than that of the element (which it shouldn't really be). If this is the case, we need to
-    // exclude this element, since it will result in too large a 'top' return value.
-    if (element.offsetParent && element.offsetParent.offsetHeight && element.offsetParent.offsetHeight < element.offsetHeight) {
-        // skip the parent that's too small
-        element = element.offsetParent.offsetParent;
-    } else {
-        // Next up...
-        element = element.offsetParent;
-    }
-
-    respond(this.context, "getElementLocation", x + ", " + y);
+    respond.context = this.context;
+    respond.response = location.x + ", " + location.y;
+    respond.send();
 };
 
-FirefoxDriver.prototype.getElementSize = function(respond, elementId) {
-    var element = Utils.getElementAt(elementId, this.context);
+FirefoxDriver.prototype.getElementSize = function(respond) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
 
     var width = element.offsetWidth;
     var height = element.offsetHeight;
 
-    respond(this.context, "getElementSize", width + ", " + height);
-}
+    respond.context = this.context;
+    respond.response = width + ", " + height;
+    respond.send();
+};
+
+FirefoxDriver.prototype.dragAndDrop = function(respond, movementString) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
+    
+    var clientStartXY = Utils.getElementLocation(element, this.context);
+    
+    var clientStartX = clientStartXY.x;
+    var clientStartY = clientStartXY.y;
+    
+    var movementX = movementString[0];
+    var movementY = movementString[1];
+
+    var clientFinishX = ((clientStartX + movementX) < 0) ? 0 : (clientStartX + movementX);
+    var clientFinishY = ((clientStartY + movementY) < 0) ? 0 : (clientStartY + movementY);
+    // Restrict the desitnation into the sensible dimension
+    var window = Utils.getBrowser(this.context).contentWindow;
+    if (clientFinishX > window.innerWidth)
+        clientFinishX = window.innerWidth;
+    if (clientFinishY > window.innerHeight)
+        clientFinishY = window.innerHeight;
+
+    var mouseSpeed = this.mouseSpeed;
+    var move = function(current, dest) {
+        if (current == dest) return current;
+        if (Math.abs(current - dest) < mouseSpeed) return dest;
+        return (current < dest) ? current + mouseSpeed : current - mouseSpeed;
+    }
+
+    Utils.triggerMouseEvent(element, 'mousedown', clientStartX, clientStartY);
+    Utils.triggerMouseEvent(element, 'mousemove', clientStartX, clientStartY);
+    var clientX = clientStartX;
+    var clientY = clientStartY;
+
+    while ((clientX != clientFinishX) || (clientY != clientFinishY)) {
+        clientX = move(clientX, clientFinishX);
+        clientY = move(clientY, clientFinishY);
+        
+        Utils.triggerMouseEvent(element, 'mousemove', clientX, clientY);
+    }
+
+    Utils.triggerMouseEvent(element, 'mousemove', clientFinishX, clientFinishY);
+    Utils.triggerMouseEvent(element, 'mouseup',  clientFinishX, clientFinishY);
+
+    var finalLoc = Utils.getElementLocation(element, this.context)
+
+    respond.context = this.context;
+    respond.response = finalLoc.x + "," + finalLoc.y;
+    respond.send();
+};
+
+FirefoxDriver.prototype.findElementsByXPath = function (respond, xpath) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
+    var indices = Utils.findElementsByXPath(xpath, element, this.context)
+    var response = ""
+    for (var i = 0; i < indices.length; i++) {
+      response += indices[i] + ",";
+    }
+    response = response.substring(0, response.length - 1);
+
+    respond.context = this.context;
+    respond.response = response;
+    respond.send();
+};
+
+FirefoxDriver.prototype.findElementsByLinkText = function (respond, linkText) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
+    var children = element.getElementsByTagName("a");
+    var response = "";
+    for (var i = 0; i < children.length; i++) {
+      if (linkText == Utils.getText(children[i])) {
+        response += Utils.addToKnownElements(children[i], this.context) + ",";
+      }
+    }
+    response = response.substring(0, response.length - 1);
+    
+    respond.context = this.context;
+    respond.response = response;
+    respond.send();
+};
+
+FirefoxDriver.prototype.findElementById = function(respond, id) {
+	var doc = Utils.getDocument(this.context);
+	var parentElement = Utils.getElementAt(respond.elementId, this.context);
+    var element = doc.getElementById(id);
+    var isChild = false;
+    
+    if (element) {
+    	var tmp = element;
+    	while (tmp != null) {
+    		if (tmp == parentElement) {
+    			isChild = true;
+	    		break;
+	    	}
+	    	tmp = tmp.parentNode	
+	    }
+		if (isChild) {
+	        respond.response = Utils.addToKnownElements(element, this.context);
+		} else {
+			//The first match is not a child of the current node, fall back
+			//to xpath to see if there are any children nodes with that id
+			elements = Utils.findElementsByXPath("*[@id = '" + id + "']", parentElement, this.context)
+			if (elements.length > 0) {
+				respond.response = elements[0];
+			} else {
+    			respond.response = "-1";
+			}
+		}
+    } else {
+    	respond.response = "-1";
+    }
+    respond.send();
+};

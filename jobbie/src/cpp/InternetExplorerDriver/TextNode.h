@@ -2,6 +2,7 @@
 #define TextNode_h
 
 #include <mshtml.h>
+#include <string>
 #include "Node.h"
 #include "AbstractNode.h"
 #include "DocumentNode.h"
@@ -12,7 +13,8 @@ public:
 	TextNode(IHTMLDOMNode* element);
 	~TextNode();
 
-	Node* getFirstAttribute();
+	virtual Node* getFirstAttribute() const;
+	virtual std::wstring getText() const;
 };
 
 #endif

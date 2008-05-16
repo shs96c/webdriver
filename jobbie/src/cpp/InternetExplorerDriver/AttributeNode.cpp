@@ -8,50 +8,47 @@
 
 using namespace std;
 
-AttributeNode::AttributeNode(IEnumVARIANT* enumerator)
+AttributeNode::AttributeNode(IHTMLAttributeCollection* allAttributes, long currentIndex)
+	: allAttributes(allAttributes), currentIndex(currentIndex), attribute(NULL)
 {
-	this->enumerator = enumerator;
-	this->enumerator->AddRef();
+	allAttributes->get_length(&length);
 
 	moveToNextSpecifiedIndex();
 
 	if (this->attribute == NULL) {
-		this->enumerator->Release();
 		throw "No declared attributes";
 	}
 }
 
 AttributeNode::~AttributeNode()
 {
-	attribute->Release();
-	enumerator->Release();
 }
 
-Node* AttributeNode::getDocument() 
+Node* AttributeNode::getDocument() const
 {
 	return NULL;
 }
 
-Node* AttributeNode::getNextSibling()
+Node* AttributeNode::getNextSibling() const
 {
 	try {
-		return new AttributeNode(enumerator);
+		return new AttributeNode(allAttributes, currentIndex);
 	} catch (const char*) {
 		return NULL;
 	}
 }
 
-Node* AttributeNode::getFirstChild() 
+Node* AttributeNode::getFirstChild() const
 {
 	return NULL;
 }
 
-Node* AttributeNode::getFirstAttribute() 
+Node* AttributeNode::getFirstAttribute() const
 {
 	return NULL;
 }
 
-const std::wstring AttributeNode::name()
+std::wstring AttributeNode::name() const
 {
 	BSTR name;
 	attribute->get_nodeName(&name);
@@ -65,11 +62,11 @@ const std::wstring AttributeNode::name()
 	return toReturn;
 }
 
-const wchar_t* AttributeNode::getText()
+std::wstring AttributeNode::getText() const
 {
 	VARIANT value;
 	attribute->get_nodeValue(&value);
-	const wchar_t* toReturn = variant2wchar(value);
+	std::wstring toReturn = variant2wchar(value);
 	VariantClear(&value);
 	return toReturn;
 }
@@ -78,22 +75,32 @@ void AttributeNode::moveToNextSpecifiedIndex()
 {
 	this->attribute = NULL;
 
-	while (true) {
-		VARIANT* results = new VARIANT[1];
-		enumerator->Next(1, results, NULL);
-		IDispatch* nextAttribute = results[0].pdispVal;
-		if (nextAttribute == NULL)
-			return;
+	while (currentIndex < length) {
+		currentIndex++;
 
-		IHTMLDOMAttribute* attr;
-		nextAttribute->QueryInterface(__uuidof(IHTMLDOMAttribute), (void**)&attr);
+		IDispatch* nextAttrDispatch;
+		VARIANT idx;
+		idx.vt = VT_I4;
+		idx.lVal = currentIndex;
+		allAttributes->item(&idx, &nextAttrDispatch);
+		CComQIPtr<IHTMLDOMAttribute> attr(nextAttrDispatch);
+
+		if (!attr) {
+			continue;
+		}
 
 		VARIANT_BOOL specified;
 		attr->get_specified(&specified);
-		if (specified == VARIANT_TRUE) {
+		
+		BSTR plainName;
+		attr->get_nodeName(&plainName);
+		std::wstring name = bstr2wstring(plainName);
+		
+		if (specified == VARIANT_TRUE || name == L"value") {
+			SysFreeString(plainName);
 			this->attribute = attr;
 			return;
 		}
-		attr->Release();
+		SysFreeString(plainName);
 	}
 }

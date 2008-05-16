@@ -1,11 +1,13 @@
 #pragma once
 
-#include <Exdisp.h>
-#include <mshtml.h>
 #include <string>
 #include <vector>
+
+#include <Exdisp.h>
+#include <mshtml.h>
+
 #include "InternetExplorerDriver.h"
-#include "com_thoughtworks_webdriver_ie_InternetExplorerElement.h"
+#include "com_googlecode_webdriver_ie_InternetExplorerElement.h"
 
 class InternetExplorerDriver;
 
@@ -15,45 +17,41 @@ public:
 	ElementWrapper(InternetExplorerDriver* ie, IHTMLDOMNode *node);
 	~ElementWrapper();
 
-	const wchar_t* getAttribute(const wchar_t* name);
-	const wchar_t* getValue();
-	InternetExplorerDriver* setValue(wchar_t* newValue);
+	std::wstring getAttribute(const std::wstring& name);
+	std::wstring getValue();
+	void sendKeys(const std::wstring& newValue);
+	void clear();
 	bool isSelected();
-	InternetExplorerDriver* setSelected();
+	void setSelected();
 	bool isEnabled();
 	bool isDisplayed();
 	bool toggle();
-	const std::wstring getText();
+	std::wstring getText();
 
 	long getX();
 	long getY();
 	long getWidth();
 	long getHeight();
 
-	InternetExplorerDriver* click();
-	InternetExplorerDriver* submit();
+	void click();
+	void submit();
 
-	std::vector<ElementWrapper*>* getChildrenWithTagName(const wchar_t* tagName);
-
-	void setNode(IHTMLDOMNode* fromNode);
+	std::vector<ElementWrapper*>* getChildrenWithTagName(const std::wstring& tagName);
 
 private:
-	void setInputFileValue(wchar_t* newValue);
-	const wchar_t* getTextAreaValue();
+	std::wstring getTextAreaValue();
 	bool isCheckbox();
-	IHTMLFormElement* findParentForm();
+	void findParentForm(IHTMLFormElement **pform);
 	IHTMLEventObj* newEventObject();
 	void fireEvent(IHTMLEventObj*, const OLECHAR*);
 	void fireEvent(IHTMLDOMNode* fireFrom, IHTMLEventObj*, const OLECHAR*);
 
-	void getText(std::wstring& toReturn, IHTMLDOMNode* node, std::wstring& textSoFar, bool isPreformatted);
-	std::wstring collapseWhitespace(const std::wstring& text);
-	bool isBlockLevel(IHTMLDOMNode *node);
-
-	void keyPress(short keyCode);
-	void keyPress(short keyCode, bool shouldRelease);
+	static void getText(std::wstring& toReturn, IHTMLDOMNode* node, bool isPreformatted);
+	static void collapsingAppend(std::wstring& s, const std::wstring& s2);
+	static std::wstring collapseWhitespace(const wchar_t *text);
+	static bool isBlockLevel(IHTMLDOMNode *node);
 
 	InternetExplorerDriver* ie;
-	IHTMLElement* element;
+	CComQIPtr<IHTMLElement> element;
 };
 

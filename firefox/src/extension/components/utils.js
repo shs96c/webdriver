@@ -17,7 +17,7 @@ Utils.getService = function(className, serviceName) {
 };
 
 Utils.getServer = function() {
-    var handle = Utils.newInstance("@thoughtworks.com/webdriver/fxdriver;1", "nsISupports");
+    var handle = Utils.newInstance("@googlecode.com/webdriver/fxdriver;1", "nsISupports");
     return handle.wrappedJSObject;
 }
 
@@ -135,41 +135,53 @@ Utils.getElementAt = function(index, context) {
 
 Utils.type = function(context, element, text) {
     var isTextField = element["value"] !== undefined;
-
     var value = "";
+    
     if (isTextField) {
-        element.value = value;
-    } else {
-        element.setAttribute("value", value);
+        value = element.value;
+    } else if (element.hasAttribute("value")) {
+        value = element.getAttribute("value");
     }
 
     for (var i = 0; i < text.length; i++) {
         var character = text.charAt(i);
+        var keyCode = character;
         value += character;
 
-        Utils.keyDownOrUp(context, element, true, character);
-        Utils.keyPress(context, element, character);
+        if (text.charAt(i) == '\uE002') {
+            keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_UP;
+            character = 0;
+        } else if (text.charAt(i) == '\uE004') {
+            keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_DOWN;
+            character = 0;
+        } else if (text.charAt(i) == '\uE001') {
+            keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_LEFT;
+            character = 0;
+        } else if (text.charAt(i) == '\uE003') {
+            keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_RIGHT;
+            character = 0;
+        }
+
+        Utils.keyDownOrUp(context, element, true, keyCode, character);
+        Utils.keyPress(context, element, keyCode, character);
         if (isTextField) {
             element.value = value;
         } else {
             element.setAttribute("value", value);
         }
-        Utils.keyDownOrUp(context, element, false, character);
+        Utils.keyDownOrUp(context, element, false, keyCode, character);
     }
 };
 
-Utils.keyPress = function(context, element, text) {
+Utils.keyPress = function(context, element, keyCode, charCode) {
     var event = Utils.getDocument(context).createEvent('KeyEvents');
-    event.initKeyEvent('keypress', true, true, Utils.getBrowser(context).contentWindow, 0, 0, 0, 0, 0, text.charCodeAt(0));
+    event.initKeyEvent('keypress', true, true, Utils.getBrowser(context).contentWindow, 0, 0, 0, 0, keyCode, charCode);
     element.dispatchEvent(event);
 };
 
-Utils.keyDownOrUp = function(context, element, down, text) {
-    var keyCode = text;
-    // We should do something clever with non-text characters
-
+Utils.keyDownOrUp = function(context, element, down, keyCode, charCode) {
     var event = Utils.getDocument(context).createEvent('KeyEvents');
-    event.initKeyEvent(down ? 'keydown' : 'keyup', true, true, Utils.getBrowser(context).contentWindow, 0, 0, 0, 0, keyCode, 0);
+    event.initKeyEvent(down ? 'keydown' : 'keyup', true, true, Utils.getBrowser(context).contentWindow, 0, 0, 0, 0, keyCode, charCode);
     element.dispatchEvent(event);
 };
 
@@ -206,9 +218,55 @@ Utils.findForm = function(element) {
 
 Utils.fireMouseEventOn = function(context, element, eventName) {
     var event = Utils.getDocument(context).createEvent("MouseEvents");
-    event.initMouseEvent(eventName, true, true, null, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+    var view = Utils.getDocument(context).defaultView;
+//    dump("View is: " + view + "\n");
+    event.initMouseEvent(eventName, true, true, null, 1, 0, 0, 0, 0, false, false, false, false, 0, element);
     element.dispatchEvent(event);
 }
+
+Utils.triggerMouseEvent = function(element, eventType, clientX, clientY) {
+    var event = element.ownerDocument.createEvent("MouseEvents");
+    event.initMouseEvent(eventType, true, true, null, 1, 0, 0, clientX, clientY, false, false, false, false, 0, element);
+    element.dispatchEvent(event);
+}
+
+Utils.findDocumentInFrame = function(browser, frameId) {
+    var frame = Utils.findFrame(browser, frameId);
+    return frame ? frame.document : null;
+};
+
+Utils.findFrame = function(browser, frameId) {
+    var stringId = "" + frameId;
+    var names = stringId.split(".");
+    var frame = browser.contentWindow;
+    for (var i = 0; i < names.length; i++) {
+        // Try a numerical index first
+        var index = names[i] - 0;
+        if (!isNaN(index)) {
+            frame = frame.frames[index];
+            if (!frame) {
+                return null;
+            }
+        } else {
+            // Fine. Use the name and loop
+            var found = false;
+            for (var j = 0; j < frame.frames.length; j++) {
+                var f = frame.frames[j];
+                if (f.name == names[i] || f.frameElement.id == names[i]) {
+                    frame = f;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                return null;
+            }
+        }
+    }
+
+    return frame;
+};
 
 Utils.dump = function(element) {
     dump("=============\n");
@@ -263,3 +321,58 @@ Utils.stackTrace = function() {
         dump(stack + "\n");
     }
 }
+
+Utils.getElementLocation = function(element, context) {		
+    var x = element.offsetLeft;
+    var y = element.offsetTop;
+    var elementParent = element.offsetParent;
+  dump("1: "+x + ", " + y + "\n");
+  dump("style: "+element.style.left + ", " + element.style.top + "\n");
+    while (elementParent != null) {
+        if(elementParent.tagName == "TABLE") {
+            var parentBorder = parseInt(elementParent.border);
+            if(isNaN(parentBorder)) {
+                var parentFrame = elementParent.getAttribute('frame');
+                if(parentFrame != null) {
+                    x += 1;
+                    y += 1;
+                }
+            } else if(parentBorder > 0) {
+                x += parentBorder;
+                y += parentBorder;
+            }
+        }
+        x += elementParent.offsetLeft;
+        y += elementParent.offsetTop;
+        elementParent = elementParent.offsetParent;
+    }
+
+    // Netscape can get confused in some cases, such that the height of the parent is smaller
+    // than that of the element (which it shouldn't really be). If this is the case, we need to
+    // exclude this element, since it will result in too large a 'top' return value.
+    if (element.offsetParent && element.offsetParent.offsetHeight && element.offsetParent.offsetHeight < element.offsetHeight) {
+        // skip the parent that's too small
+        element = element.offsetParent.offsetParent;
+    } else {
+        // Next up...
+        element = element.offsetParent;
+    }
+    var location = new Object();
+    location.x = x;
+    location.y = y;
+    dump("2: "+x + ", " + y + "\n");
+    return location;
+};
+
+Utils.findElementsByXPath = function (xpath, contextNode, context) {
+    var doc = Utils.getDocument(context);
+    var result = doc.evaluate(xpath, contextNode, null, Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+    var indices = [];
+    var element = result.iterateNext();
+    while (element) {
+        var index = Utils.addToKnownElements(element, context);
+        indices.push(index);
+        element = result.iterateNext();
+    }
+    return indices;
+};

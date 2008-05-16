@@ -7,20 +7,22 @@
 class AttributeNode : public Node
 {
 public:
-	AttributeNode(IEnumVARIANT* enumerator);
+	AttributeNode(IHTMLAttributeCollection* allAttributes, long currentIndex);
 	~AttributeNode();
 
-	Node* getDocument();
-	Node* getNextSibling();
-	Node* getFirstChild();
-	Node* getFirstAttribute();
+	virtual Node* getDocument() const;
+	virtual Node* getNextSibling() const;
+	virtual Node* getFirstChild() const;
+	virtual Node* getFirstAttribute() const;
 
-	const std::wstring name();
-	const wchar_t* getText();
+	std::wstring name() const;
+	std::wstring getText() const;
 
 private:
 	void moveToNextSpecifiedIndex();
 
-	IEnumVARIANT* enumerator;
-	IHTMLDOMAttribute* attribute;
+	long length;
+	long currentIndex;
+	CComPtr<IHTMLAttributeCollection> allAttributes;
+	CComPtr<IHTMLDOMAttribute> attribute;
 };

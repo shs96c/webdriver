@@ -63,7 +63,7 @@
 </div>
 
 <div>
-  <form action="#">
+  <form action="resultPage.html" id="on-form">
     <input id="theworks"
            onfocus="appendMessage('focus')"
            onkeydown="appendMessage('keydown')"
@@ -72,6 +72,13 @@
            onblur="appendMessage('blur')"
            onchange="appendMessage('change')"
     />
+
+    <button type="button" id="plainButton" onclick="javascript:appendMessage('click ')" onmousedown="javascript:appendMessage('mousedown ')" onmouseup="javascript:appendMessage('mouseup ')"><b>Go somewhere</b></button>
+    <button type="submit" id="submittingButton"><emph>submit</emph></button>
+    <button type="button" id="jsSubmitButton" onclick="javascript:document.getElementById('on-form').submit();">Submitomatic</button>
+
+    <button type="button" id="switchFocus" onclick="document.getElementById('theworks').focus();">Switch focus</button>
+    <button type="button" onclick="var element = document.getElementById('switchFocus'); var clickEvent = document.createEvent('MouseEvents'); clickEvent.initMouseEvent('click', true, true, null, 0, 0, 0, 0, 0,false, false, false, false, 0, element);element.dispatchEvent(clickEvent);">Do magic</button>
   </form>
 </div>
 
@@ -81,7 +88,23 @@
     <p id="none" style="display: none;">Display set to none</p>
 
     <p id="hidden" style="visibility: hidden;">Hidden</p>
+
+    <div id="hiddenparent" style="height: 2em; display: none;">
+      <div id="hiddenchild">
+        <a href="#" id="hiddenlink">ok</a>
+      </div>
+    </div>
 </div>
+
+<div>
+    <form>
+        <input type="text" id="keyReporter"
+               onkeyup="appendMessage('up: ' + event.keyCode)"
+               onkeypress="appendMessage('press: ' + event.keyCode)"
+               onkeydown="displayMessage(''); appendMessage('down: ' + event.keyCode)" />
+    </form>
+</div>
+
 
 </body>
 </html>

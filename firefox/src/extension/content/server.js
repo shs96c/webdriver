@@ -1,7 +1,7 @@
 var driver = false;
 
 window.addEventListener("load", function(e) {
-    handle = Components.classes["@thoughtworks.com/webdriver/fxdriver;1"].createInstance(Components.interfaces.nsISupports);
+    handle = Components.classes["@googlecode.com/webdriver/fxdriver;1"].createInstance(Components.interfaces.nsISupports);
     var server = handle.wrappedJSObject;
 
     server.startListening();
@@ -38,3 +38,11 @@ window.addEventListener("load", function(e) {
         }
     }
 }, true);
+
+//window.addEventListener("focus", function(e) {
+//    var active = e.originalTarget;
+//    var doc = gBrowser.selectedBrowser.contentDocument;
+//    if (active.ownerDocument == doc) {
+//        driver.activeElement = active;
+//    }
+//}, true);

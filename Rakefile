@@ -6,7 +6,7 @@ require 'rake/rdoctask'
 
 task :default => [:test]
 
-task :build => [:common, :htmlunit, :firefox, :safari, :support]
+task :build => [:common, :htmlunit, :firefox, :support]
 
 task :clean do
   rm_rf 'common/build'
@@ -15,13 +15,14 @@ task :clean do
   rm_rf 'firefox/build'
   rm_rf 'safari/build'
   rm_rf 'support/build'
+  rm_rf 'selenium/build'
 end
 
-task :test => [:test_htmlunit, :test_firefox, :test_safari, :test_support] do 
+task :test => [:test_htmlunit, :test_firefox, :test_support] do 
 end
 
 task :install_firefox => [:firefox] do  
-  libs = %w(common/build/webdriver-common.jar firefox/build/webdriver-firefox.jar)
+  libs = %w(common/build/webdriver-common.jar firefox/build/webdriver-firefox.jar firefox/lib/runtime/json-20070829.jar)
 
   firefox = "firefox"
   if ENV['firefox'] then
@@ -35,7 +36,7 @@ task :install_firefox => [:firefox] do
   cmd += ' -cp ' + libs.join(File::PATH_SEPARATOR)
   cmd += ' -Dwebdriver.firefox.development="' + extension_loc + '"' 
   cmd += " -Dwebdriver.firefox.bin=\"#{ENV['firefox']}\" " unless ENV['firefox'].nil?
-  cmd += ' com.thoughtworks.webdriver.firefox.FirefoxLauncher '
+  cmd += ' com.googlecode.webdriver.firefox.FirefoxLauncher '
     
   sh cmd, :verbose => true
 end
@@ -44,7 +45,7 @@ file 'common/build/webdriver-common.jar' => FileList['common/src/java/*.java'];
 
 file 'common/build/webdriver-common-test.jar' => FileList['common/test/java/*.java'];
 
-%w(common htmlunit jobbie firefox safari support).each do |driver|
+%w(common htmlunit jobbie firefox safari support selenium).each do |driver|
   source = FileList["#{driver}/src/java/**/*.java"]
   libs = ["#{driver}/lib/runtime/*.jar", "#{driver}/lib/buildtime/*.jar", "common/build/webdriver-common.jar"]
   deps = Array.new
@@ -100,6 +101,12 @@ if windows? then
   Rake::Task[:test].enhance([:test_jobbie])
   Rake::Task[:test_jobbie].enhance([:jobbie])
   Rake::Task[:jobbie].enhance %w(jobbie/build/webdriver-jobbie.dll)
+end
+
+if mac? then
+  Rake::Task[:build].enhance([:safari])
+  Rake::Task[:test].enhance([:test_safari])
+  Rake::Task[:test_safari].enhance([:safari])
 end
 
 task :generate_headers => [:jobbie] do

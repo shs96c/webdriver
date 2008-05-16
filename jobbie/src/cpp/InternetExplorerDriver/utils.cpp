@@ -1,14 +1,16 @@
 #include "stdafx.h"
-#include "utils.h"
+
 #include <iostream>
-#include "Node.h"
-#include "ElementNode.h"
-#include "TextNode.h"
+#include <sstream>
 #include <string>
 
-using namespace std;
-
 #include <jni.h>
+
+#include "CommentNode.h"
+#include "ElementNode.h"
+#include "Node.h"
+#include "TextNode.h"
+#include "utils.h"
 
 void throwException(JNIEnv *env, const char* className, const char *message)
 {
@@ -24,7 +26,7 @@ void throwException(JNIEnv *env, const char* className, const char *message)
 
 void throwNoSuchElementException(JNIEnv *env, const char *message)
 {
-	throwException(env, "com/thoughtworks/webdriver/NoSuchElementException", message);
+	throwException(env, "com/googlecode/webdriver/NoSuchElementException", message);
 }
 
 void throwRunTimeException(JNIEnv *env, const char *message)
@@ -39,14 +41,12 @@ void throwUnsupportedOperationException(JNIEnv *env, const char *message)
 
 void startCom() 
 {
-	if (!SUCCEEDED(CoInitialize(NULL))) {
-		throw "Cannot initialize COM";
-	}
+	CoInitialize(NULL);
 }
 
 jobject newJavaInternetExplorerDriver(JNIEnv* env, InternetExplorerDriver* driver) 
 {
-	jclass clazz = env->FindClass("com/thoughtworks/webdriver/ie/InternetExplorerDriver");
+	jclass clazz = env->FindClass("com/googlecode/webdriver/ie/InternetExplorerDriver");
 	jmethodID cId = env->GetMethodID(clazz, "<init>", "(J)V");
 
 	return env->NewObject(clazz, cId, (jlong) driver);
@@ -60,39 +60,39 @@ jobject initJavaXPathNode(JNIEnv* env, Node* node)
 	jclass clazz;
 	if (dynamic_cast<TextNode*>(node)) 
 	{
-		clazz = env->FindClass("com/thoughtworks/webdriver/ie/TextNode");
-	} else 
+		clazz = env->FindClass("com/googlecode/webdriver/ie/TextNode");
+	} else if (dynamic_cast<CommentNode*>(node))
 	{
-		clazz = env->FindClass("com/thoughtworks/webdriver/ie/ElementNode");
+		clazz = env->FindClass("com/googlecode/webdriver/ie/CommentNode");
+	} else
+	{
+		clazz = env->FindClass("com/googlecode/webdriver/ie/ElementNode");
 	}
 	jmethodID cId = env->GetMethodID(clazz, "<init>", "(J)V");
 	return env->NewObject(clazz, cId, (jlong) node);
 }
 
+static std::wstring stringify(int number)
+{
+	std::wostringstream o;
+	o << number;
+	return o.str();
+}
 
-const wchar_t* variant2wchar(const VARIANT toConvert) 
+std::wstring variant2wchar(const VARIANT toConvert) 
 {
 	VARTYPE type = toConvert.vt;
-	wchar_t* toReturn;
 
 	switch (type) {
 		case VT_BOOL:
-			if (toConvert.boolVal) {
-				toReturn = new wchar_t[5];
-				wcscpy_s(toReturn, 5, L"true");
-			} else {
-				toReturn = new wchar_t[6];
-				wcscpy_s(toReturn, 6, L"false");
-			}
-			return toReturn;
+			return (toConvert.boolVal) ? L"true" : L"false";
 
 		case VT_BSTR: 
-			return bstr2wchar(toConvert.bstrVal);
+			return bstr2wstring(toConvert.bstrVal);
 
 		case VT_EMPTY:
-			toReturn = new wchar_t[1];
-			wcscpy_s(toReturn, 1, L"");
-			return toReturn;
+		case VT_NULL:
+			return L"";
 /*
 		case VT_I4:
 			long value = toConvert.lVal;
@@ -101,29 +101,13 @@ const wchar_t* variant2wchar(const VARIANT toConvert)
 			swprintf(toReturn, length, L"%l", value);
 			return toReturn;
 */
-		case VT_NULL:
-			return NULL;
 
 		default:
-			cerr << "Unknown variant type: " << type << endl;
+			std::wstring msg(L"Unknown variant type: ");
+			msg += stringify(type);
+			OutputDebugString(msg.c_str());
+			return L"";
 	}
-
-	return NULL;
-}
-
-wchar_t* bstr2wchar(BSTR from) 
-{
-	if (!from) {
-			size_t length = 2;
-			wchar_t* toReturn = new wchar_t[length];
-			wcscpy_s(toReturn, length, L"");
-			return toReturn;
-	}
-
-	size_t length = SysStringLen(from) + 1;
-	wchar_t* toReturn = new wchar_t[length];
-	wcscpy_s(toReturn, length, from);
-	return toReturn;
 }
 
 std::wstring bstr2wstring(BSTR from) 
@@ -139,4 +123,9 @@ std::wstring bstr2wstring(BSTR from)
 	delete[] buf;
 
 	return toReturn;
+}
+
+jstring wstring2jstring(JNIEnv *env, const std::wstring& text)
+{
+	return env->NewString((const jchar*) text.c_str(), (jsize) text.length());
 }
