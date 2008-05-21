@@ -1,7 +1,7 @@
 
 import re
-
 import extension_connection
+from webelement import FirefoxWebElement
 
 class FirefoxWebDriver:
   def __init__(self):
@@ -22,13 +22,23 @@ class FirefoxWebDriver:
   def SetVisible(self, visible):
     pass
 
+  def FindElementsByXPath(self, xpath):
+    elemId = self.conn.command("selectElementUsingXPath", [xpath])
+    print elemId
+    assert type(elemId) == int, "Bad response format"
+    elem = FirefoxWebElement(self, elemId)
+    return elem
+  
   def FindElements(self, by):
+    #Maybe there is easier way to do this in a dynamic language
     pass
 
   def FindElement(self, by):
     pass
  
   def GetPageSource(self):
+    #Seesm the json parser doesn't like handling
+    #very large message
     pass
 
   def Close(self):
@@ -48,8 +58,10 @@ class FirefoxWebDriver:
   
 if __name__ == "__main__":
   driver = FirefoxWebDriver()
-  driver.Get("http://www.google.com")
+  driver.Get("http://localhost:8080")
   print driver.GetCurrentUrl()
   
   print driver.GetTitle()
-  driver.Close()
+  elem = driver.FindElementsByXPath("//a")
+  print elem.GetText()
+  #driver.Close()
