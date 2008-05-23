@@ -22,7 +22,7 @@ class FirefoxWebDriver(object):
   def setVisible(self, visible):
     pass
 
-  def findElementsByXPath(self, xpath):
+  def findElementByXPath(self, xpath):
     elemId = self.conn.command("selectElementUsingXPath", [xpath])
     assert type(elemId) == int, "Bad response format: %s" % str(elemId)
     elem = FirefoxWebElement(self, elemId)
@@ -34,6 +34,9 @@ class FirefoxWebDriver(object):
     elem = FirefoxWebElement(self, elemId)
     return elem
 
+  def findElementById(self, id):
+    return self.findElementByXPath("//*[@id=\"%s\"]" % id)
+        
   def findElements(self, by):
     #Maybe there is easier way to do this in a dynamic language
     pass
@@ -42,10 +45,8 @@ class FirefoxWebDriver(object):
     pass
  
   def getPageSource(self):
-    #Seesm the json parser doesn't like handling
-    #very large message
-    pass
-
+    return self.conn.command("getPageSource")
+  
   def close(self):
     self.conn.command("close")
 

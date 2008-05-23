@@ -1,4 +1,6 @@
 import extension_connection
+import exceptions
+from common import logger
 
 class FirefoxWebElement(object):
 
@@ -17,25 +19,29 @@ class FirefoxWebElement(object):
     self._command("submitElement")
 
   def getValue(self):
-    pass
+    return self._command("getElementValue")
 
   def clear(self):
     self._command("clear")
 
   def getAttribute(self, name):
-    pass
+    return self._command("getElementAttribute", name)
 
   def toggle(self):
     self._command("toggleElement")
 
   def isSelected(self):
-    pass
+    return self._command("getElementSelected")
 
   def setSelected(self):
     self._command("setElementSelected")
 
   def isEnabled(self):
-    pass
+    if self.getAttribute("disabled"):
+      return False
+    else:
+      # The "disabled" attribute may not exist
+      return True
 
   def findElements(self, by):
     pass
@@ -43,5 +49,13 @@ class FirefoxWebElement(object):
   def findElement(self, by):
     pass
 
-  def _command(self, _cmd, _params=[]):
-    return self.conn.command(_cmd, params = _params, elementId=self.id)
+  def findElementsByXPath(self, xpath):
+    resp = self._command("findElementsByXPath", xpath)
+    elems = []
+    for elemId in resp.split(","):
+      elem = FirefoxWebElement(self.parent, elemId)
+      elems.append(elem)
+    return elems
+
+  def _command(self, _cmd, *args):
+    return self.conn.command(_cmd, params = args, elementId=self.id)

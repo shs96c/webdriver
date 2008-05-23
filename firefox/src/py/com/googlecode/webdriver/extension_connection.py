@@ -2,7 +2,9 @@ import socket
 import re
 import threading
 from com.googlecode.webdriver.lib import demjson
-from com.googlecode.webdriver import logger
+from common import logger
+import firefox_launcher
+import exceptions
 
 class ExtensionConnection(object):
   #Borg pattern hive mind state
@@ -11,19 +13,17 @@ class ExtensionConnection(object):
   def __init__(self):
     logger.debug("extension connection initiated")
     self.__dict__ = self.__shared_state
-    try:
-      self.socket
-    except AttributeError:
+    if "socket" not in self.__dict__:
       self.lock = threading.RLock()
       self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       self.socket.connect(("localhost",7055))
+
       self.socket.settimeout(20)
       self.context = "null"
       resp = self.command("findActiveDriver",[])
       self.context = "%d" % resp
 
   def command(self, cmd, params=[], elementId="null"):
-
     json_dump = demjson.encode({"parameters": params,
                                 "context": self.context,
                                 "elementId": elementId,
@@ -47,6 +47,9 @@ class ExtensionConnection(object):
     sections = re.findall(r'{.*}', resp)
     if sections:
       json_content = sections[0];
-      return demjson.decode(json_content)['response']
+      decoded = demjson.decode(json_content)
+      if decoded["isError"]:
+        raise exceptions.ErrorInResponseException()
+      return decoded["response"]
     else :
       return None
