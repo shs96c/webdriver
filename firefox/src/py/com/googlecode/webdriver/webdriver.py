@@ -1,67 +1,73 @@
-
 import re
 import extension_connection
 from webelement import FirefoxWebElement
+from firefox_target_locator import FirefoxTargetLocator
 
-class FirefoxWebDriver:
+class FirefoxWebDriver(object):
   def __init__(self):
     self.conn = extension_connection.ExtensionConnection()
 
-  def Get(self, url):
+  def get(self, url):
     self.conn.command("get", [url])
 
-  def GetCurrentUrl(self):
+  def getCurrentUrl(self):
     return self.conn.command("getCurrentUrl")
 
-  def GetTitle(self):
+  def getTitle(self):
     return self.conn.command("title")
 
-  def GetVisible(self):
+  def getVisible(self):
     return True
 
-  def SetVisible(self, visible):
+  def setVisible(self, visible):
     pass
 
-  def FindElementsByXPath(self, xpath):
+  def findElementsByXPath(self, xpath):
     elemId = self.conn.command("selectElementUsingXPath", [xpath])
-    print elemId
     assert type(elemId) == int, "Bad response format"
     elem = FirefoxWebElement(self, elemId)
     return elem
   
-  def FindElements(self, by):
+  def findElementByLinkText(self, link):
+    elemId = self.conn.command("selectElementUsingLink", [link])
+    assert type(elemId) == int, "Bad response format"
+    elem = FirefoxWebElement(self, elemId)
+    return elem
+
+  def findElements(self, by):
     #Maybe there is easier way to do this in a dynamic language
     pass
 
-  def FindElement(self, by):
+  def findElement(self, by):
     pass
  
-  def GetPageSource(self):
+  def getPageSource(self):
     #Seesm the json parser doesn't like handling
     #very large message
     pass
 
-  def Close(self):
+  def close(self):
     self.conn.command("close")
 
-  def Quit(self):
+  def quit(self):
     self.conn.command("quit")
 
-  def SwitchTo(self):
+  def switchTo(self):
+    return FirefoxTargetLocator()
+
+  def navigate(self):
     pass
 
-  def Navigate(self):
+  def manage(self):
     pass
 
-  def Manage(self):
-    pass
   
 if __name__ == "__main__":
   driver = FirefoxWebDriver()
-  driver.Get("http://localhost:8080")
-  print driver.GetCurrentUrl()
+  driver.get("http://localhost:8080")
+  print driver.getCurrentUrl()
   
-  print driver.GetTitle()
-  elem = driver.FindElementsByXPath("//a")
-  print elem.GetText()
+  print driver.getTitle()
+  elem = driver.findElementsByXPath("//a")
+  print elem.getText()
   #driver.Close()
