@@ -44,7 +44,7 @@ class SimpleWebServer(object):
     self.stop_serving = True
     try:
       urllib.URLopener().open("http://localhost:8000")
-    except IOError:
+    except:
       pass  #the server has shutdown
     self.thread.join()
 

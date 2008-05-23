@@ -3,16 +3,14 @@ import sys
 import unittest
 from com.googlecode.webdriver import webdriver
 from com.googlecode.webdriver import webserver
-from com.googlecode.webdriver.logger import logger
+from com.googlecode.webdriver import logger
 
 class BasicTest (unittest.TestCase):
   def setUp(self):
-    self.webserver = webserver.SimpleWebServer()
-    self.webserver.start()
     self.driver = webdriver.FirefoxWebDriver()
 
   def tearDown(self):
-    self.webserver.stop()
+    pass
 
   def testGetTitle(self):
     self._loadSimplePage()
@@ -29,14 +27,24 @@ class BasicTest (unittest.TestCase):
     elem = self.driver.findElementsByXPath("//h1")
     self.assertEquals("Heading", elem.getText())
 
+  def testSwitchTo(self):
+    self._loadPage("xhtmlTest")
+    self.driver.findElementByLinkText("Open new window").click();
+    self.assertEquals("XHTML Test Page", self.driver.getTitle())
+    self.driver.switchTo().window("result")
+    self.assertEquals("We Arrive Here", self.driver.getTitle())
+
   def _loadSimplePage(self):
     self.driver.get("http://localhost:8000/simpleTest.html")
 
+  def _loadPage(self, name):
+    self.driver.get("http://localhost:8000/%s.html" % name)
+
 if __name__ == "__main__":
-  unittest.main()
-
-  #elem = driver.FindElementsByXPath("//a")
-  #print elem.GetText()
-  #driver.Close()
-
-
+  webserver = webserver.SimpleWebServer()
+  webserver.start()
+  try:
+    unittest.main()
+  except:
+    pass
+  webserver.stop()

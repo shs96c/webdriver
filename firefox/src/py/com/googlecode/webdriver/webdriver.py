@@ -24,7 +24,7 @@ class FirefoxWebDriver(object):
 
   def findElementsByXPath(self, xpath):
     elemId = self.conn.command("selectElementUsingXPath", [xpath])
-    assert type(elemId) == int, "Bad response format"
+    assert type(elemId) == int, "Bad response format: %s" % str(elemId)
     elem = FirefoxWebElement(self, elemId)
     return elem
   

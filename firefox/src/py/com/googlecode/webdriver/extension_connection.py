@@ -1,6 +1,7 @@
 import socket
-import simplejson
 import re
+import threading
+from com.googlecode.webdriver.lib import demjson
 from com.googlecode.webdriver import logger
 
 class ExtensionConnection(object):
@@ -8,10 +9,12 @@ class ExtensionConnection(object):
   __shared_state = {}
 
   def __init__(self):
+    logger.debug("extension connection initiated")
     self.__dict__ = self.__shared_state
     try:
       self.socket
     except AttributeError:
+      self.lock = threading.RLock()
       self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       self.socket.connect(("localhost",7055))
       self.socket.settimeout(20)
@@ -20,7 +23,8 @@ class ExtensionConnection(object):
       self.context = "%d" % resp
 
   def command(self, cmd, params=[], elementId="null"):
-    json_dump = simplejson.dumps({"parameters": params,
+
+    json_dump = demjson.encode({"parameters": params,
                                 "context": self.context,
                                 "elementId": elementId,
                                 "commandName":cmd})
@@ -29,11 +33,20 @@ class ExtensionConnection(object):
     packet += json_dump
     packet += "\n"
     logger.debug(packet)
+
+    self.lock.acquire()
     self.socket.send(packet)
-    resp = self.socket.recv(1000)
+    resp = ""
+    while True:
+      resp += self.socket.recv(128)
+      if re.findall(r'{.*}', resp):
+        break
+    self.lock.release()
+
+    logger.debug(resp)
     sections = re.findall(r'{.*}', resp)
     if sections:
       json_content = sections[0];
-      return simplejson.loads(json_content)['response']
+      return demjson.decode(json_content)['response']
     else :
       return None
