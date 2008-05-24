@@ -1,7 +1,7 @@
 import socket
 import re
 import threading
-from com.googlecode.webdriver.lib import demjson
+from com.googlecode.webdriver.lib import simplejson
 from common import logger
 import firefox_launcher
 import exceptions
@@ -24,7 +24,7 @@ class ExtensionConnection(object):
       self.context = "%d" % resp
 
   def command(self, cmd, params=[], elementId="null"):
-    json_dump = demjson.encode({"parameters": params,
+    json_dump = simplejson.dumps({"parameters": params,
                                 "context": self.context,
                                 "elementId": elementId,
                                 "commandName":cmd})
@@ -47,7 +47,7 @@ class ExtensionConnection(object):
     sections = re.findall(r'{.*}', resp)
     if sections:
       json_content = sections[0];
-      decoded = demjson.decode(json_content)
+      decoded = simplejson.loads(json_content)
       if decoded["isError"]:
         raise exceptions.ErrorInResponseException()
       return decoded["response"]
