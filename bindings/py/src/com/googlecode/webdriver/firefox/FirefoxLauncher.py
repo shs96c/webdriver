@@ -5,7 +5,7 @@ import platform
 
 class FirefoxLauncher(object):
   
-  def launchBrowser(self):
+  def LaunchBrowser(self):
     if platform.system() == "Darwin":
       cmd = "/Applications/Firefox.app/Contents/MacOS/firefox"
     else:
@@ -17,4 +17,4 @@ class FirefoxLauncher(object):
     Popen(["kill", "%d" % self.process.pid])
 
 if __name__ == "__main__":
-  launchBrowser()
+  FirefoxLauncher().launchBrowser()

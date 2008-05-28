@@ -1,9 +1,8 @@
 import socket
 import re
 import threading
-from com.googlecode.webdriver.lib import simplejson
+import simplejson
 from common import logger
-import firefox_launcher
 import exceptions
 
 class ExtensionConnection(object):
@@ -49,7 +48,8 @@ class ExtensionConnection(object):
       json_content = sections[0];
       decoded = simplejson.loads(json_content)
       if decoded["isError"]:
-        raise exceptions.ErrorInResponseException()
+        raise exceptions.ErrorInResponseException(
+          "Error occurred when processing %s" % packet)
       return decoded["response"]
     else :
       return None

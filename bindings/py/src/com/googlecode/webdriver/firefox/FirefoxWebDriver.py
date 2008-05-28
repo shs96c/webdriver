@@ -1,65 +1,68 @@
 import re
-import extension_connection
-from webelement import FirefoxWebElement
-from firefox_target_locator import FirefoxTargetLocator
+import sys
+from ExtensionConnection import ExtensionConnection
+from FirefoxWebElement import FirefoxWebElement
+from FirefoxTargetLocator import FirefoxTargetLocator
 
-class FirefoxWebDriver(object):
+from com.googlecode.webdriver.webdriver import WebDriver
+
+class FirefoxWebDriver(WebDriver):
   def __init__(self):
-    self.conn = extension_connection.ExtensionConnection()
+    self.conn = ExtensionConnection()
 
-  def get(self, url):
+  def Get(self, url):
     self.conn.command("get", [url])
 
-  def getCurrentUrl(self):
+  def GetCurrentUrl(self):
     return self.conn.command("getCurrentUrl")
 
-  def getTitle(self):
+  def GetTitle(self):
     return self.conn.command("title")
 
-  def getVisible(self):
+  def GetVisible(self):
     return True
 
-  def setVisible(self, visible):
+  def GetVisible(self, visible):
     pass
 
-  def findElementByXPath(self, xpath):
+  def FindElementByXPath(self, xpath):
     elemId = self.conn.command("selectElementUsingXPath", [xpath])
     assert type(elemId) == int, "Bad response format: %s" % str(elemId)
     elem = FirefoxWebElement(self, elemId)
     return elem
   
-  def findElementByLinkText(self, link):
+  def FindElementByLinkText(self, link):
     elemId = self.conn.command("selectElementUsingLink", [link])
     assert type(elemId) == int, "Bad response format"
     elem = FirefoxWebElement(self, elemId)
     return elem
 
-  def findElementById(self, id):
-    return self.findElementByXPath("//*[@id=\"%s\"]" % id)
+  def FindElementById(self, id):
+    return self.FindElementByXPath("//*[@id=\"%s\"]" % id)
         
-  def findElements(self, by):
+  def FindElements(self, by):
     #Maybe there is easier way to do this in a dynamic language
     pass
 
-  def findElement(self, by):
+  def FindElement(self, by):
     pass
  
-  def getPageSource(self):
+  def GetPageSource(self):
     return self.conn.command("getPageSource")
   
-  def close(self):
+  def Close(self):
     self.conn.command("close")
 
-  def quit(self):
+  def Quit(self):
     self.conn.command("quit")
 
-  def switchTo(self):
+  def SwitchTo(self):
     return FirefoxTargetLocator()
 
-  def navigate(self):
+  def Navigate(self):
     pass
 
-  def manage(self):
+  def Manage(self):
     pass
 
   

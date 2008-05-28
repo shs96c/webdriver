@@ -1,55 +1,55 @@
-import extension_connection
-import exceptions
+from ExtensionConnection import ExtensionConnection
 from common import logger
+from com.googlecode.webdriver.WebElement import WebElement
 
-class FirefoxWebElement(object):
+class FirefoxWebElement(WebElement):
 
   def __init__(self, parent, id):
     self.parent = parent
-    self.conn = extension_connection.ExtensionConnection()
+    self.conn = ExtensionConnection()
     self.id = id
 
-  def getText(self):
+  def GetText(self):
     return self._command("getElementText")
 
-  def click(self):
+  def Click(self):
     self._command("click")
 
-  def submit(self):
+  def Submit(self):
     self._command("submitElement")
 
-  def getValue(self):
+  def GetValue(self):
     return self._command("getElementValue")
 
-  def clear(self):
+  def Clear(self):
     self._command("clear")
 
-  def getAttribute(self, name):
+  def GetAttribute(self, name):
     return self._command("getElementAttribute", name)
 
-  def toggle(self):
+  def Toggle(self):
     self._command("toggleElement")
 
-  def isSelected(self):
+  def IsSelected(self):
     return self._command("getElementSelected")
 
-  def setSelected(self):
+  def SetSelected(self):
     self._command("setElementSelected")
 
-  def isEnabled(self):
-    if self.getAttribute("disabled"):
+  def IsEnabled(self):
+    if self.GetAttribute("disabled"):
       return False
     else:
       # The "disabled" attribute may not exist
       return True
 
-  def findElements(self, by):
+  def FindElements(self, by):
     pass
 
-  def findElement(self, by):
+  def FindElement(self, by):
     pass
 
-  def findElementsByXPath(self, xpath):
+  def FindElementsByXPath(self, xpath):
     resp = self._command("findElementsByXPath", xpath)
     elems = []
     for elemId in resp.split(","):
