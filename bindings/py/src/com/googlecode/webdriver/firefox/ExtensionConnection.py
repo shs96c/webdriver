@@ -49,7 +49,8 @@ class ExtensionConnection(object):
       decoded = simplejson.loads(json_content)
       if decoded["isError"]:
         raise exceptions.ErrorInResponseException(
-          "Error occurred when processing %s" % packet)
+          "Error occurred when processing %s, response: %s" % (packet, resp))
+      self.context = decoded["context"]  #Update our context
       return decoded["response"]
     else :
       return None

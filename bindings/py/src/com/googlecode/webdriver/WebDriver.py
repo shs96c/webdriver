@@ -1,3 +1,4 @@
+
 class WebDriver (object):
   
   def Get(self):
@@ -38,4 +39,4 @@ class WebDriver (object):
 
   def Manage(self):
     raise NotImplementedError()
-  
+

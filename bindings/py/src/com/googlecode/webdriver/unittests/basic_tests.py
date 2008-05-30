@@ -30,12 +30,21 @@ class BasicTest (unittest.TestCase):
     elem = self.driver.FindElementByXPath("//h1")
     self.assertEquals("Heading", elem.GetText())
 
-  def testSwitchTo(self):
+  def testSwitchToWindow(self):
+    title_1 = "XHTML Test Page"
+    title_2 = "We Arrive Here"
     self._loadPage("xhtmlTest")
     self.driver.FindElementByLinkText("Open new window").Click()
-    self.assertEquals("XHTML Test Page", self.driver.GetTitle())
+    self.assertEquals(title_1, self.driver.GetTitle())
     self.driver.SwitchTo().Window("result")
-    self.assertEquals("We Arrive Here", self.driver.GetTitle())
+    self.assertEquals(title_2, self.driver.GetTitle())
+    
+  def testSwitchToFrame(self):
+    self._loadPage("frameset")
+    self.driver.SwitchTo().FrameByIndex(2)
+    checkbox = self.driver.FindElementById("checky")
+    checkbox.Toggle()
+    checkbox.Submit()
 
   def testGetPageSource(self):
     self._loadSimplePage()

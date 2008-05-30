@@ -4,7 +4,7 @@ from ExtensionConnection import ExtensionConnection
 from FirefoxWebElement import FirefoxWebElement
 from FirefoxTargetLocator import FirefoxTargetLocator
 
-from com.googlecode.webdriver.webdriver import WebDriver
+from com.googlecode.webdriver.WebDriver import WebDriver
 
 class FirefoxWebDriver(WebDriver):
   def __init__(self):
