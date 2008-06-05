@@ -117,31 +117,21 @@ public class InternetExplorerDriver implements WebDriver, SearchContext,
 	}
 	private native List<WebElement> selectElementsByClassName(String using);
 
+	private native WebElement selectElementByXPath(String using);
+	
 	public WebElement findElementByXPath(String using) {
-        try {
-            Object result = new IeXPath(using, this).selectSingleNode(getDocument());
-                if (result == null)
-                    throw new NoSuchElementException("Cannot find element: " + using);
-                return InternetExplorerElement.createInternetExplorerElement(iePointer, ((ElementNode) result));
-        } catch (JaxenException e) {
-            throw new RuntimeException(e);
-        }
+		return selectElementByXPath(using);
     }
 
-    @SuppressWarnings("unchecked")
+	private native void selectElementsByXPath(String linkText, List<WebElement> rawElements);
+	
 	public List<WebElement> findElementsByXPath(String using) {
-        List<ElementNode> rawElements = new ArrayList<ElementNode>();
-        try {
-            rawElements = new IeXPath(using, this).selectNodes(getDocument());
-            if (rawElements == null)
-                throw new NoSuchElementException("Cannot find element: " + using);
-            return convertRawPointersToElements(rawElements);
-        } catch (JaxenException e) {
-            throw new RuntimeException(e);
-        }
+        List<WebElement> rawElements = new ArrayList<WebElement>();
+        selectElementsByXPath(using, rawElements);
+        return rawElements;
     }
 
-
+    
     public List<WebElement> findElementsByLinkText(String using) {
         List<ElementNode> rawElements = new ArrayList<ElementNode>();
         selectElementsByLink(using, rawElements);

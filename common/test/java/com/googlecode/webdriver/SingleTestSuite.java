@@ -10,17 +10,16 @@ public class SingleTestSuite {
     private final static String SAFARI = "com.googlecode.webdriver.safari.SafariDriver";
 
     public static Test suite() {
-        System.setProperty("webdriver.firefox.useExisting", "true");
+//        System.setProperty("webdriver.firefox.useExisting", "true");
 
         return new TestSuiteBuilder()
 				    	.addSourceDir("common")
-              .addSourceDir("firefox")
+//              .addSourceDir("firefox")
               .usingDriver(IE)
               .keepDriverInstance()
               .includeJavascriptTests()
               .onlyRun("ElementAttributeTest")
-              .method("testShouldReturnValueOfClassAttributeOfAnElement")
-  //            .method("testShouldFindElementsByClass")
+//              .method("testShouldReturnValueOfClassAttributeOfAnElement")
 //                        .leaveRunningAfterTest()
               .create();
 	}

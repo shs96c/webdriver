@@ -99,13 +99,12 @@ std::wstring variant2wchar(VARIANT toConvert)
 	}
 
 	// Fine. Attempt to coerce to a string
-	VARIANT dest;
 	HRESULT res = VariantChangeType(&toConvert, &toConvert, VARIANT_ALPHABOOL, VT_BSTR);
 	if (!SUCCEEDED(res)) {
 		return L"";
 	}
 	
-	return bstr2wstring(dest.bstrVal);
+	return bstr2wstring(toConvert.bstrVal);
 }
 
 std::wstring bstr2wstring(BSTR from) 
