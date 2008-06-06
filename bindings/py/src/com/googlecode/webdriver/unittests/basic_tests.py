@@ -7,6 +7,7 @@ from com.googlecode.webdriver.firefox.FirefoxWebDriver import FirefoxWebDriver
 from com.googlecode.webdriver.firefox.webserver import SimpleWebServer
 from com.googlecode.webdriver.firefox.common import logger
 from com.googlecode.webdriver.firefox.FirefoxLauncher import FirefoxLauncher
+from com.googlecode.webdriver.firefox.FirefoxNavigation import FirefoxNavigation
 
 class BasicTest (unittest.TestCase):
   def setUp(self):
@@ -70,7 +71,16 @@ class BasicTest (unittest.TestCase):
     self.assertTrue(option_elems[2].IsSelected())
 
   def testManage(self):
-    self.driver.Manage()
+    self.assertTrue(self.driver.Manage())
+
+  def testNavigate(self):
+    self._loadPage("formPage")
+    self.driver.FindElementById("imageButton").Submit()
+    self.assertEquals("We Arrive Here", self.driver.GetTitle())
+    self.driver.Navigate().Back()
+    self.assertEquals("We Leave From Here", self.driver.GetTitle())
+    self.driver.Navigate().Forward()
+    self.assertEquals("We Arrive Here", self.driver.GetTitle())
 
   def _loadSimplePage(self):
     self.driver.Get("http://localhost:8000/simpleTest.html")
@@ -88,6 +98,6 @@ if __name__ == "__main__":
     unittest.main()
   except:
     pass
-
-  firefox.closeBrowser()
+  driver = FirefoxWebDriver()
+  driver.Quit()
   webserver.stop()

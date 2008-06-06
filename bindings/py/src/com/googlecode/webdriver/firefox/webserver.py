@@ -9,7 +9,7 @@ HTML_ROOT = "../../../common/src/web/"
 class MyHandler(BaseHTTPRequestHandler):
   def do_GET(self):
     try:
-      self.path = self.path[1:]
+      self.path = self.path[1:].split('?')[0]
       f = open(os.path.join(HTML_ROOT, self.path))
       self.send_response(200)
       self.send_header('Content-type', 'text/html')

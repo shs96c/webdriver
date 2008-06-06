@@ -35,6 +35,9 @@ class ExtensionConnection(object):
 
     self.lock.acquire()
     self.socket.send(packet)
+    if cmd == "quit":
+      return
+
     resp = ""
     while True:
       resp += self.socket.recv(128)

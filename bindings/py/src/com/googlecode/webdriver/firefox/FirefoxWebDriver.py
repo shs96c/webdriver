@@ -3,6 +3,8 @@ import sys
 from ExtensionConnection import ExtensionConnection
 from FirefoxWebElement import FirefoxWebElement
 from FirefoxTargetLocator import FirefoxTargetLocator
+from FirefoxNavigation import FirefoxNavigation
+from FirefoxOptions import FirefoxOptions
 
 from com.googlecode.webdriver.WebDriver import WebDriver
 
@@ -22,7 +24,7 @@ class FirefoxWebDriver(WebDriver):
   def GetVisible(self):
     return True
 
-  def GetVisible(self, visible):
+  def SetVisible(self, visible):
     pass
 
   def FindElementByXPath(self, xpath):
@@ -42,10 +44,10 @@ class FirefoxWebDriver(WebDriver):
         
   def FindElements(self, by):
     #Maybe there is easier way to do this in a dynamic language
-    pass
+    raise NotImplementedError()
 
   def FindElement(self, by):
-    pass
+    raise NotImplementedError()
  
   def GetPageSource(self):
     return self.conn.command("getPageSource")
@@ -60,18 +62,9 @@ class FirefoxWebDriver(WebDriver):
     return FirefoxTargetLocator()
 
   def Navigate(self):
-    pass
+    return FirefoxNavigation()
 
   def Manage(self):
-    pass
+    return FirefoxOptions()
 
-  
-if __name__ == "__main__":
-  driver = FirefoxWebDriver()
-  driver.get("http://localhost:8080")
-  print driver.getCurrentUrl()
-  
-  print driver.getTitle()
-  elem = driver.findElementsByXPath("//a")
-  print elem.getText()
-  #driver.Close()
+
