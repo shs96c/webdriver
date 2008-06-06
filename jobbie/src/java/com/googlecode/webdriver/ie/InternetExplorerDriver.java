@@ -26,16 +26,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.jaxen.JaxenException;
 
 import com.googlecode.webdriver.Alert;
 import com.googlecode.webdriver.By;
 import com.googlecode.webdriver.Cookie;
-import com.googlecode.webdriver.NoSuchElementException;
 import com.googlecode.webdriver.SearchContext;
 import com.googlecode.webdriver.Speed;
 import com.googlecode.webdriver.WebDriver;
@@ -133,25 +129,15 @@ public class InternetExplorerDriver implements WebDriver, SearchContext,
 
     
     public List<WebElement> findElementsByLinkText(String using) {
-        List<ElementNode> rawElements = new ArrayList<ElementNode>();
+        List<WebElement> rawElements = new ArrayList<WebElement>();
         selectElementsByLink(using, rawElements);
-        return convertRawPointersToElements(rawElements);
+        return rawElements;
     }
 
 
   public List<WebElement> findElementsById(String using) {
     throw new UnsupportedOperationException("findElementsById");
   }
-
-  private List<WebElement> convertRawPointersToElements(List<ElementNode> rawElements) {
-        List<WebElement> elements = new ArrayList<WebElement>();
-        Iterator<ElementNode> iterator = rawElements.iterator();
-        while (iterator.hasNext()) {
-            ElementNode element = iterator.next();
-            elements.add(InternetExplorerElement.createInternetExplorerElement(iePointer, element));
-        }
-        return elements;
-    }
 
   @Override
     public String toString() {
@@ -228,14 +214,12 @@ public class InternetExplorerDriver implements WebDriver, SearchContext,
 
     private native WebElement selectElementByLink(String linkText);
 
-    private native void selectElementsByLink(String linkText, List<ElementNode> rawElements);
+    private native void selectElementsByLink(String linkText, List<WebElement> rawElements);
 
     private native WebElement selectElementByName(String using);
 
     private native List<WebElement> selectElementsByName(String using);
     
-    private native DocumentNode getDocument();
-
     @Override
     protected void finalize() throws Throwable {
     	if (iePointer != 0)

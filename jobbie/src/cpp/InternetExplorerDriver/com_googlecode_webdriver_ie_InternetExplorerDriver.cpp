@@ -4,7 +4,6 @@
 #include "utils.h"
 #include "InternetExplorerDriver.h"
 #include "ElementWrapper.h"
-#include "DocumentNode.h"
 #include <iostream>
 
 using namespace std;
@@ -222,22 +221,6 @@ JNIEXPORT jobject JNICALL Java_com_googlecode_webdriver_ie_InternetExplorerDrive
 		throwNoSuchElementException(env, message);
 		return NULL;
 	} 
-}
-
-JNIEXPORT jobject JNICALL Java_com_googlecode_webdriver_ie_InternetExplorerDriver_getDocument
-  (JNIEnv *env, jobject obj)
-{
-	InternetExplorerDriver *ie = getIe(env, obj);
-	CComPtr<IHTMLDocument2> doc;
-	ie->getDocument(&doc);
-
-	if (!doc) return NULL;
-	
-	DocumentNode *node = new DocumentNode(doc);
-	jclass clazz = env->FindClass("com/googlecode/webdriver/ie/DocumentNode");
-	jmethodID cId = env->GetMethodID(clazz, "<init>", "(J)V");
-
-	return env->NewObject(clazz, cId, (jlong) node);
 }
 
 JNIEXPORT void JNICALL Java_com_googlecode_webdriver_ie_InternetExplorerDriver_deleteStoredObject

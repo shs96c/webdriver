@@ -117,32 +117,34 @@ bool InternetExplorerDriver::addEvaluateToDocument(int count)
 	CComPtr<IHTMLDocument2> doc;
 	getDocument(&doc);
 
-	if (!doc)
-		return NULL;
+	if (!doc) {
+		return false;
+	}
 
 	CComPtr<IDispatch> evaluate;
 	DISPID dispid;
 	OLECHAR FAR* szMember = L"__webdriver_evaluate";
     HRESULT hr = doc->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
-	if (FAILED(hr)) {
-		// Create it if necessary
-		CComPtr<IHTMLWindow2> win;
-		doc->get_parentWindow(&win);
-		
-		std::wstring script;
-		for (int i = 0; XPATHJS[i]; i++) {
-			script += XPATHJS[i];
-		}
-		executeScript(script.c_str(), NULL);
+	if (SUCCEEDED(hr)) {
+		return true;
 	}
 
+	// Create it if necessary
+	CComPtr<IHTMLWindow2> win;
+	doc->get_parentWindow(&win);
+	
+	std::wstring script;
+	for (int i = 0; XPATHJS[i]; i++) {
+		script += XPATHJS[i];
+	}
+	executeScript(script.c_str(), NULL);
+	
 	hr = doc->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
 	if (FAILED(hr)) {
-		if (count < 3) {
+		if (count < 1) {
 			return addEvaluateToDocument(++count);
 		}
-
-		cout << "Failed to add method" << endl;
+	
 		return false;
 	}
 	return true;
@@ -612,10 +614,41 @@ void InternetExplorerDriver::executeScript(const wchar_t *script, VARIANT *resul
 	CComPtr<IDispatch> scriptEngine;
 	doc->get_Script(&scriptEngine);
 
+	bool added = false;
+
 	DISPID dispid;
 	OLECHAR FAR* szMember = L"eval";
     HRESULT hr = scriptEngine->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
-	if (FAILED(hr)) return;
+	if (FAILED(hr)) { 
+		added = true;
+		// Start the script engine by adding a script tag to the page
+		// We need to start the script engine. Do this by appending a script tag to the page
+		CComPtr<IHTMLElement> scriptTag;
+		doc->createElement(L"script", &scriptTag);
+		scriptTag->setAttribute(L"defer", CComVariant(L"true"));
+		scriptTag->setAttribute(L"type", CComVariant(L"JScript"));
+		CComBSTR addMe(L"<span id='__webdriver_private_span'>&nbsp;<script defer>");
+		addMe.Append("</script></span>");
+		scriptTag->put_innerHTML(addMe);
+
+		CComPtr<IHTMLElement> body;
+		doc->get_body(&body);
+		CComQIPtr<IHTMLDOMNode> node(body);
+		CComQIPtr<IHTMLDOMNode> scriptNode(scriptTag);
+
+		CComPtr<IHTMLDOMNode> generatedChild;
+		node->appendChild(scriptNode, &generatedChild);
+
+		scriptEngine.Release();
+		doc->get_Script(&scriptEngine);
+		hr = scriptEngine->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+
+		if (FAILED(hr)) {
+			// Now remove the temporary tag from the document, leaving it unsullied
+			executeScript(L"var s = document.getElementById('__webdriver_private_span'); s.outerHTML=''", NULL);
+			return;
+		}
+	}
 
 	CComVariant script_variant(script);
 	DISPPARAMS parameters = {0};
@@ -630,6 +663,10 @@ void InternetExplorerDriver::executeScript(const wchar_t *script, VARIANT *resul
 	  } else {
 		  cout << "Really failed" << endl;
 	  }
+	}
+
+	if (added) {
+		executeScript(L"var s = document.getElementById('__webdriver_private_span'); s.outerHTML=''", NULL);
 	}
 }
 
