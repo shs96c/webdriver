@@ -3,36 +3,39 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 
-using IWebDriver = com.googlecode.webdriver.IWebDriver;
-
-namespace com.googlecode.webdriver.ie
+namespace OpenQa.Selenium.IE
 {
     public class InternetExplorerDriver : IWebDriver
     {
         [DllImport("InternetExplorerDriver")]
-        private static extern IntPtr webdriver_newDriverInstance();
+        private static extern SafeInternetExplorerDriverHandle webdriver_newDriverInstance();
         public InternetExplorerDriver()
         {
             handle = webdriver_newDriverInstance();
         }
 
-        [DllImport("InternetExplorerDriver")]
-        private static extern void webdriver_deleteDriverInstance(IntPtr handle);
-        ~InternetExplorerDriver()
+        public void Dispose()
         {
-            Close();
-            webdriver_deleteDriverInstance(handle);
+            if (!disposed)
+            {
+                handle.Dispose();
+                disposed = true;
+            }
         }
 
         [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
-        private static extern void webdriver_get(IntPtr handle, string url);
+        private static extern void webdriver_get(SafeHandle handle, string url);
         public void Get(string url)
         {
+            if (disposed)
+            {
+                throw new ObjectDisposedException("handle");
+            }
             webdriver_get(handle, url);
         }
 
         [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
-        private static extern string webdriver_getCurrentUrl(IntPtr handle);
+        private static extern string webdriver_getCurrentUrl(SafeHandle handle);
         public string CurrentUrl
         {
             get
@@ -42,11 +45,11 @@ namespace com.googlecode.webdriver.ie
         }
 
         [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
-        private static extern IntPtr webdriver_findElementById(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] String id);
+        private static extern IntPtr webdriver_findElementById(SafeHandle handle, [MarshalAs(UnmanagedType.LPWStr)] String id);
         [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
-        private static extern IntPtr webdriver_findElementByLinkText(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] String linkText);
+        private static extern IntPtr webdriver_findElementByLinkText(SafeHandle handle, [MarshalAs(UnmanagedType.LPWStr)] String linkText);
         [DllImport("InternetExplorerDriver", CharSet = CharSet.Unicode)]
-        private static extern IntPtr webdriver_findElementByName(IntPtr handle, [MarshalAs(UnmanagedType.LPWStr)] String name);
+        private static extern IntPtr webdriver_findElementByName(SafeHandle handle, [MarshalAs(UnmanagedType.LPWStr)] String name);
         public IWebElement FindOneElement(By mechanism, string locator)
         {
             IntPtr rawElement;
@@ -55,15 +58,15 @@ namespace com.googlecode.webdriver.ie
             {
                 switch (mechanism)
                 {
-                    case By.ID:
+                    case By.Id:
                         rawElement = webdriver_findElementById(handle, locator);
                         break;
 
-                    case By.LINK_TEXT:
+                    case By.LinkText:
                         rawElement = webdriver_findElementByLinkText(handle, locator);
                         break;
 
-                    case By.NAME:
+                    case By.Name:
                         rawElement = webdriver_findElementByName(handle, locator);
                         break;
 
@@ -80,13 +83,7 @@ namespace com.googlecode.webdriver.ie
             }
         }
 
-        [DllImport("InternetExplorerDriver")]
-        private static extern void webdriver_close(IntPtr driver);
-        public void Close()
-        {
-            webdriver_close(handle);
-        }
-
-        private IntPtr handle;
+        private bool disposed = false;
+        private SafeInternetExplorerDriverHandle handle;
     }
 }

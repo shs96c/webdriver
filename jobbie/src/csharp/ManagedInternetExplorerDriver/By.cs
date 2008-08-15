@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace com.googlecode.webdriver
+namespace OpenQa.Selenium
 {
     public enum By
     {
-        ID,
-        LINK_TEXT,
-        NAME,
+        Id,
+        LinkText,
+        Name,
     }
 }

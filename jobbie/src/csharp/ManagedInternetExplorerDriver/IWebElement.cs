@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace com.googlecode.webdriver
+namespace OpenQa.Selenium
 {
     public interface IWebElement
     {

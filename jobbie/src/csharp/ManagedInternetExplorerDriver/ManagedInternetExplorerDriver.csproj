@@ -7,7 +7,7 @@
     <ProjectGuid>{388643B5-2270-4E89-99CC-DA761E4E4AC1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ManagedInternetExplorerDriver</RootNamespace>
+    <RootNamespace>OpenQa.Selenium</RootNamespace>
     <AssemblyName>ManagedInternetExplorerDriver</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -34,8 +34,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="By.cs" />
-    <Compile Include="InternetExplorerDriver.cs" />
-    <Compile Include="InternetExplorerWebElement.cs" />
+    <Compile Include="IE\InternetExplorerDriver.cs" />
+    <Compile Include="IE\InternetExplorerWebElement.cs" />
+    <Compile Include="IE\SafeInternetExplorerDriverHandle.cs" />
     <Compile Include="IWebElement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IWebDriver.cs" />

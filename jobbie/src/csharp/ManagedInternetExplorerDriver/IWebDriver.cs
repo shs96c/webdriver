@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace com.googlecode.webdriver
+namespace OpenQa.Selenium
 {
-    public interface IWebDriver
+    public interface IWebDriver : IDisposable
     {
         string CurrentUrl
         {
@@ -14,7 +14,5 @@ namespace com.googlecode.webdriver
         void Get(string url);
 
         IWebElement FindOneElement(By mechanism, string locator);
-
-        void Close();
     }
 }
