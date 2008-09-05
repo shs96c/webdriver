@@ -13,8 +13,8 @@ class FirefoxLauncher(object):
     self.process = Popen([cmd, "-P", "WebDriver"])
     time.sleep(5)
 
-  def closeBrowser(self):
+  def CloseBrowser(self):
     Popen(["kill", "%d" % self.process.pid])
 
 if __name__ == "__main__":
-  FirefoxLauncher().launchBrowser()
+  FirefoxLauncher().LaunchBrowser()
