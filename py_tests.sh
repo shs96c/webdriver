@@ -1,3 +1,3 @@
 cd bindings/py/src
-export PYTHONPATH=$PYTHONPATH:.
+export PYTHONPATH=$PYTHONPATH:.:../lib
 python webdriver/unittests/basic_tests.py

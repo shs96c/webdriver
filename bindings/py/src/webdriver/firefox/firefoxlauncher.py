@@ -13,8 +13,6 @@ class FirefoxLauncher(object):
       program_files = os.getenv("PROGRAMFILES")
       if program_files is None:
         program_files = "\\Program Files"
-      import pdb
-      pdb.set_trace()
       cmd = os.path.join(program_files, "Mozilla Firefox\\firefox.exe") 
     else:
       cmd = Popen(["which", "firefox2"], stdout=PIPE).communicate()[0].strip()
