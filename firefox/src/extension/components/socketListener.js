@@ -233,13 +233,14 @@ SocketListener.prototype.isReadingLineCount = function() {
 };
 
 SocketListener.prototype.switchToWindow = function(respond, windowId) {
-    var lookFor = windowId[0];
+    var lookFor = windowId;
     var wm = Utils.getService("@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator");
     var allWindows = wm.getEnumerator(null);
 
     while (allWindows.hasMoreElements()) {
         var win = allWindows.getNext();
-        if (win.content.name == lookFor) {
+        var winname = win.content.name;
+        if (winname == lookFor) {
             win.focus();
             var driver = win.top.fxdriver;
             if (!driver) {
@@ -251,12 +252,14 @@ SocketListener.prototype.switchToWindow = function(respond, windowId) {
             respond.response = new Context(win.fxdriver.id).toString();
             respond.send();
             return;
+        } else {
+            respond.response += winname + "!=" + lookFor + ","
         }
     }
 
     respond.context = this.context;
     respond.isError = true;
-    respond.response = "No window found";
+    respond.response += "No window found";
     respond.send();
 };
 
