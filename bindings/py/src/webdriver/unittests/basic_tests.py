@@ -31,6 +31,19 @@ class BasicTest (unittest.TestCase):
     elem = self.driver.FindElementByXPath("//h1")
     self.assertEquals("Heading", elem.GetText())
 
+  def testFindElementsByName(self):
+    self._loadPage("xhtmlTest")
+    elem = self.driver.FindElementByName("x")
+    self.assertEquals("Named element", elem.GetText())
+
+  def testShouldBeAbleToEnterDataIntoFormFields(self):
+    self._loadPage("xhtmlTest")
+    elem = self.driver.FindElementByXPath("//form[@name='someForm']/input[@id='username']")
+    elem.Clear()
+    elem.SendKeys("some text")
+    elem = self.driver.FindElementByXPath("//form[@name='someForm']/input[@id='username']")
+    self.assertEquals("some text", elem.GetValue())
+
   def testSwitchToWindow(self):
     title_1 = "XHTML Test Page"
     title_2 = "We Arrive Here"
@@ -42,6 +55,8 @@ class BasicTest (unittest.TestCase):
     
   def testSwitchToFrame(self):
     self._loadPage("frameset")
+    self.driver.SwitchTo().FrameByIndex(2)
+    self.driver.SwitchTo().FrameByIndex(0)
     self.driver.SwitchTo().FrameByIndex(2)
     checkbox = self.driver.FindElementById("checky")
     checkbox.Toggle()

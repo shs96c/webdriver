@@ -57,5 +57,8 @@ class WebElement(webdriver.WebElement):
       elems.append(elem)
     return elems
 
+  def SendKeys(self, keys_characters):
+    self._command("sendKeys", keys_characters)
+
   def _command(self, _cmd, *args):
     return self.conn.command(_cmd, params = args, elementId=self.id)

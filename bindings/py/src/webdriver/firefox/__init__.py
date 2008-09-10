@@ -42,6 +42,10 @@ class WebDriver(webdriver.WebDriver):
 
   def FindElementById(self, id):
     return self.FindElementByXPath("//*[@id=\"%s\"]" % id)
+
+
+  def FindElementByName(self, name):
+    return self.FindElementByXPath("//*[@name=\"%s\"]" % name)
         
   def GetPageSource(self):
     return self.conn.command("getPageSource")
