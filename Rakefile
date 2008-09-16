@@ -45,7 +45,7 @@ task :prebuild do
   end
 end
 
-task :build => [:prebuild, :common, :htmlunit, :firefox, :jobbie, :safari, :support, :remote, :selenium]
+task :build => [:prebuild, :common, :htmlunit, :firefox, :jobbie, :safari, :support, :remote, :selenium, :chrome]
 
 task :clean do
   rm_rf 'common/build'
@@ -55,10 +55,11 @@ task :clean do
   rm_rf 'safari/build'
   rm_rf 'support/build'
   rm_rf 'selenium/build'
+  rm_rf 'chrome/build'
   rm_rf 'build/'
 end
 
-task :test => [:prebuild, :test_htmlunit, :test_firefox, :test_jobbie, :test_safari, :test_support, :test_remote] do 
+task :test => [:prebuild, :test_htmlunit, :test_firefox, :test_jobbie, :test_safari, :test_support, :test_remote, :test_chrome] do 
 end
 
 task :install_firefox => [:firefox] do  
@@ -222,6 +223,22 @@ simple_jars = {
     'classpath' => ["selenium/lib/runtime/**/*.jar"] + common_libs,
     'test_on'   => false,
   },                         
+  "chrome" =>   {
+    'src'       => "chrome/src/java/**/*.java",
+    'deps'      => [:common],
+    'jar'       => "chrome/build/webdriver-chrome.jar",
+    'resources' => nil,
+    'classpath' => ["chrome/lib/runtime/**/*.jar"] + common_libs,
+    'test_on'   => false,
+  },
+  "test_chrome" => {
+    'src'       => "chrome/test/java/**/*.java",
+    'deps'      => [:chrome, :test_common],
+    'jar'       => "chrome/build/webdriver-chrome-test.jar",
+    'resources' => nil,
+    'classpath' => ["chrome/lib/**/*.jar", "chrome/build/webdriver-chrome.jar"] + common_test_libs,
+    'test_on'   => windows?,
+  },                              
 }
 
 simple_jars.each do |name, details|
