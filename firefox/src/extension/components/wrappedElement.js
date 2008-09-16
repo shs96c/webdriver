@@ -1,6 +1,8 @@
 FirefoxDriver.prototype.click = function(respond) {
     respond.context = this.context;
 
+    var currentlyActive = Utils.getActiveElement(this.context);
+
     var element = Utils.getElementAt(respond.elementId, this.context);
     if (!element) {
         respond.send();
@@ -22,19 +24,13 @@ FirefoxDriver.prototype.click = function(respond) {
     });
 
     var clickEvents = function() {
-        element.focus();
-
         fireMouseEventOn(driver.context, element, "mousedown");
-        fireMouseEventOn(driver.context, element, "mouseup");
-
-        // Now do the click. I'm a little surprised that this works as often as it does:
-        // http://developer.mozilla.org/en/docs/DOM:element.click#Notes
-        if (element["click"]) {
-            element.click();
-        } else {
-            // Send the mouse event too. Not sure if this will cause the thing to be double clicked....
-            fireMouseEventOn(driver.context, element, "click");
+        if (element != currentlyActive) {
+          currentlyActive.blur();
+          element.focus();
         }
+        
+        fireMouseEventOn(driver.context, element, "mouseup");
 
         var checkForLoad = function() {
             // Returning should be handled by the click listener, unless we're not actually loading something. Do a check and return if we are.
@@ -49,8 +45,21 @@ FirefoxDriver.prototype.click = function(respond) {
                     respond.send();
                 }
             }
-        }
-        contentWindow.setTimeout(checkForLoad, 50);
+        };
+        
+        var doClick = function() {
+	        // Now do the click. I'm a little surprised that this works as often as it does:
+	        // http://developer.mozilla.org/en/docs/DOM:element.click#Notes
+//	        if (element["click"]) {
+//	            element.click();
+//	        }
+	            // Or just send the click event.
+	            fireMouseEventOn(driver.context, element, "click");
+	        
+	        contentWindow.setTimeout(checkForLoad, 50);
+        };
+        
+        contentWindow.setTimeout(doClick, 50);
     }
 
     contentWindow.setTimeout(clickEvents, 50);
@@ -96,9 +105,12 @@ FirefoxDriver.prototype.sendKeys = function(respond, value) {
 
     var element = Utils.getElementAt(respond.elementId, this.context);
 
-    element.focus();
+  var currentlyActive = Utils.getActiveElement(this.context);
+  if (currentlyActive != element) {
+      currentlyActive.blur();
+      element.focus();
+  }
     Utils.type(this.context, element, value[0]);
-    element.blur();
 
     respond.context = this.context;
     respond.send();
@@ -446,5 +458,11 @@ FirefoxDriver.prototype.findElementById = function(respond, id) {
     } else {
     	respond.response = "-1";
     }
+    respond.send();
+};
+
+FirefoxDriver.prototype.getElementCssProperty = function(respond, propertyName) {
+    var element = Utils.getElementAt(respond.elementId, this.context);
+    respond.response = Utils.getStyleProperty(element, propertyName); // Coeerce to a string
     respond.send();
 };

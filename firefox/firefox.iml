@@ -15,11 +15,11 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/runtime/json-20070829.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/runtime/json-20080701.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$MODULE_DIR$/lib-src/json-20070829-sources.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib-src/json-20080701-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

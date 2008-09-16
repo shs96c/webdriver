@@ -1,16 +1,23 @@
 #include "stdafx.h"
 
+#include <ctime>
 #include <iostream>
 #include <sstream>
 #include <string>
 
 #include <jni.h>
 
-#include "CommentNode.h"
-#include "ElementNode.h"
-#include "Node.h"
-#include "TextNode.h"
 #include "utils.h"
+
+// Caller frees memory
+char* convertFromWideToAscii(const wchar_t* message) 
+{
+	size_t origsize = wcslen(message) + 1;
+    size_t convertedChars = 0;
+    char* converted = new char[origsize];
+    wcstombs_s(&convertedChars, converted, origsize, message, _TRUNCATE);
+	return converted;
+}
 
 void throwException(JNIEnv *env, const char* className, const char *message)
 {
@@ -26,7 +33,21 @@ void throwException(JNIEnv *env, const char* className, const char *message)
 
 void throwNoSuchElementException(JNIEnv *env, const char *message)
 {
-	throwException(env, "com/googlecode/webdriver/NoSuchElementException", message);
+	throwException(env, "org/openqa/selenium/NoSuchElementException", message);
+}
+
+void throwNoSuchElementException(JNIEnv *env, const wchar_t *message) 
+{
+	char* converted = convertFromWideToAscii(message);
+	throwNoSuchElementException(env, converted);
+	delete[] converted;
+}
+
+void throwNoSuchFrameException(JNIEnv *env, const wchar_t *message) 
+{
+	char* converted = convertFromWideToAscii(message);
+	throwException(env, "org/openqa/selenium/NoSuchFrameException", converted);
+	delete[] converted;
 }
 
 void throwRunTimeException(JNIEnv *env, const char *message)
@@ -46,30 +67,24 @@ void startCom()
 
 jobject newJavaInternetExplorerDriver(JNIEnv* env, InternetExplorerDriver* driver) 
 {
-	jclass clazz = env->FindClass("com/googlecode/webdriver/ie/InternetExplorerDriver");
+	jclass clazz = env->FindClass("org/openqa/selenium/ie/InternetExplorerDriver");
 	jmethodID cId = env->GetMethodID(clazz, "<init>", "(J)V");
 
 	return env->NewObject(clazz, cId, (jlong) driver);
 }
 
-jobject initJavaXPathNode(JNIEnv* env, Node* node) 
+void wait(long millis)
 {
-	if (node == NULL)
-		return NULL;
-
-	jclass clazz;
-	if (dynamic_cast<TextNode*>(node)) 
+	clock_t end = clock() + millis;
+	do
 	{
-		clazz = env->FindClass("com/googlecode/webdriver/ie/TextNode");
-	} else if (dynamic_cast<CommentNode*>(node))
-	{
-		clazz = env->FindClass("com/googlecode/webdriver/ie/CommentNode");
-	} else
-	{
-		clazz = env->FindClass("com/googlecode/webdriver/ie/ElementNode");
-	}
-	jmethodID cId = env->GetMethodID(clazz, "<init>", "(J)V");
-	return env->NewObject(clazz, cId, (jlong) node);
+		MSG msg;
+		if (PeekMessage( &msg, NULL, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg); 
+			DispatchMessage(&msg); 
+		}
+		Sleep(0);
+	} while (clock() < end);
 }
 
 static std::wstring stringify(int number)
@@ -79,35 +94,36 @@ static std::wstring stringify(int number)
 	return o.str();
 }
 
-std::wstring variant2wchar(const VARIANT toConvert) 
+std::wstring variant2wchar(VARIANT toConvert) 
 {
 	VARTYPE type = toConvert.vt;
 
-	switch (type) {
+	switch(type) {
 		case VT_BOOL:
-			return (toConvert.boolVal) ? L"true" : L"false";
+			return toConvert.boolVal == VARIANT_TRUE ? L"true" : L"false";
 
-		case VT_BSTR: 
+		case VT_BSTR:
 			return bstr2wstring(toConvert.bstrVal);
 
 		case VT_EMPTY:
-		case VT_NULL:
 			return L"";
-/*
-		case VT_I4:
-			long value = toConvert.lVal;
-			int length = value / 10;
-			toReturn = new wchar_t[length + 1];
-			swprintf(toReturn, length, L"%l", value);
-			return toReturn;
-*/
 
-		default:
-			std::wstring msg(L"Unknown variant type: ");
-			msg += stringify(type);
-			OutputDebugString(msg.c_str());
+		case VT_NULL:
+			// TODO(shs96c): This should really return NULL.
+			return L"";
+
+		// This is lame
+		case VT_DISPATCH:
 			return L"";
 	}
+
+	// Fine. Attempt to coerce to a string
+	HRESULT res = VariantChangeType(&toConvert, &toConvert, VARIANT_ALPHABOOL, VT_BSTR);
+	if (!SUCCEEDED(res)) {
+		return L"";
+	}
+	
+	return bstr2wstring(toConvert.bstrVal);
 }
 
 std::wstring bstr2wstring(BSTR from) 
@@ -127,5 +143,19 @@ std::wstring bstr2wstring(BSTR from)
 
 jstring wstring2jstring(JNIEnv *env, const std::wstring& text)
 {
+	if (!text.c_str())
+		return NULL;
 	return env->NewString((const jchar*) text.c_str(), (jsize) text.length());
+}
+
+long getLengthOf(SAFEARRAY* ary)
+{
+	if (!ary)
+		return 0;
+
+	long lower = 0;
+	SafeArrayGetLBound(ary, 1, &lower);
+	long upper = 0;
+	SafeArrayGetUBound(ary, 1, &upper);
+	return 1 + upper - lower;
 }

@@ -62,6 +62,7 @@ There should be a form here:
         <option id="changeme">Two</option>
     </select>
 
+    <input id="no-type" />
     <input type="file" id="upload" />
 </form>
 
@@ -73,5 +74,13 @@ There should be a form here:
   <input type="text" value="id"   id="id-name2"/>
   <input type="text" value="name" name="id-name2"/>
 </form>
+
+<!-- form with nested children -->
+<form method="get" action="resultPage.html" id="nested_form">
+  <div>
+    <input type="text" value="name" name="x"/>
+  </div>
+</form>  
+
 </body>
 </html>

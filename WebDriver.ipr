@@ -60,6 +60,15 @@
     <option name="OPEN_IN_BROWSER" value="false" />
     <option name="OUTPUT_DIRECTORY" />
   </component>
+  <component name="FacetAutodetectingManager">
+    <autodetection-disabled>
+      <facet-type id="web">
+        <modules>
+          <module name="remote" />
+        </modules>
+      </facet-type>
+    </autodetection-disabled>
+  </component>
   <component name="GUI Designer component loader factory" />
   <component name="IdProvider" IDEtalkID="9607147E7FEC5358F7E4A12AAC506390" />
   <component name="InspectionProjectProfileManager">
@@ -799,6 +808,7 @@
       <module fileurl="file://$PROJECT_DIR$/firefox/firefox.iml" filepath="$PROJECT_DIR$/firefox/firefox.iml" />
       <module fileurl="file://$PROJECT_DIR$/htmlunit/htmlunit.iml" filepath="$PROJECT_DIR$/htmlunit/htmlunit.iml" />
       <module fileurl="file://$PROJECT_DIR$/jobbie/jobbie.iml" filepath="$PROJECT_DIR$/jobbie/jobbie.iml" />
+      <module fileurl="file://$PROJECT_DIR$/remote/remote.iml" filepath="$PROJECT_DIR$/remote/remote.iml" />
       <module fileurl="file://$PROJECT_DIR$/safari/safari.iml" filepath="$PROJECT_DIR$/safari/safari.iml" />
       <module fileurl="file://$PROJECT_DIR$/selenium/selenium.iml" filepath="$PROJECT_DIR$/selenium/selenium.iml" />
       <module fileurl="file://$PROJECT_DIR$/support/support.iml" filepath="$PROJECT_DIR$/support/support.iml" />
@@ -810,14 +820,14 @@
   <component name="ProjectRunConfigurationManager">
     <configuration default="false" name="SingleTestSuite" type="JUnit" factoryName="JUnit" enabled="false" merge="false">
       <pattern value="com.googlecode.webdriver.*" />
-      <module name="firefox" />
+      <module name="htmlunit" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" value="" />
-      <option name="PACKAGE_NAME" value="com.googlecode.webdriver" />
-      <option name="MAIN_CLASS_NAME" value="com.googlecode.webdriver.SingleTestSuite" />
+      <option name="PACKAGE_NAME" value="org.openqa.selenium" />
+      <option name="MAIN_CLASS_NAME" value="org.openqa.selenium.SingleTestSuite" />
       <option name="METHOD_NAME" value="" />
       <option name="TEST_OBJECT" value="class" />
-      <option name="VM_PARAMETERS" value="" />
+      <option name="VM_PARAMETERS" value="-Dwebdriver.firefox.useExisting=true" />
       <option name="PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <option name="ADDITIONAL_CLASS_PATH" />
@@ -867,7 +877,7 @@
   <component name="libraryTable">
     <library name="common-buildtime">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/common/lib/buildtime/junit-3.8.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/lib/buildtime/junit-dep-4.4.jar!/" />
         <root url="jar://$PROJECT_DIR$/common/lib/buildtime/hamcrest-all-1.1.jar!/" />
         <root url="jar://$PROJECT_DIR$/common/lib/buildtime/jmock-2.4.0.jar!/" />
         <root url="jar://$PROJECT_DIR$/common/lib/buildtime/jmock-junit3-2.4.0.jar!/" />

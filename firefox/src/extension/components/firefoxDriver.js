@@ -2,7 +2,7 @@ function FirefoxDriver(server, id) {
     this.server = server;
     this.context = new Context();
     this.id = id;
-    this.mouseSpeed = 1; 
+    this.mouseSpeed = 1;
 }
 
 FirefoxDriver.prototype.get = function(respond, url) {
@@ -74,6 +74,72 @@ FirefoxDriver.prototype.close = function(respond) {
     respond.send();
 }
 
+FirefoxDriver.prototype.executeScript = function(respond, script) {
+  var context = this.context;
+  var window = Utils.getBrowser(this.context).contentWindow;
+
+  var parameters = new Array();
+  var runScript;
+  // Pre 2.0.0.15
+  if (window['alert'] && !window.wrappedJSObject) {
+    runScript = function(scriptSrc) {
+      var document = window.document;
+      var __webdriverParams = parameters;
+      var __webdriverEval = eval;
+
+      with (window) {
+        return __webdriverEval(scriptSrc);
+      }
+    };
+  } else {
+    runScript = function(scriptSrc) {
+      window = window.wrappedJSObject;
+      var sandbox = new Components.utils.Sandbox(window);
+      sandbox.window = window;
+      sandbox.__webdriverParams = parameters;
+      sandbox.document = window.document;
+      sandbox.unsafeWindow = window;
+      sandbox.__proto__ = window;
+
+      return Components.utils.evalInSandbox(scriptSrc, sandbox);
+    };
+  }
+
+  try {
+	scriptSrc = "var __webdriverFunc = function(){" + script.shift() + "};  __webdriverFunc.apply(window, __webdriverParams);";
+
+    var convert = script.shift();
+    while (convert && convert.length > 0) {
+      var t = convert.shift();
+
+      if (t['type'] == "ELEMENT") {
+        var element = Utils.getElementAt(t['value'], context);
+        t['value'] = element.wrappedJSObject ? element.wrappedJSObject : element;
+      }
+
+      parameters.push(t['value']);
+    }
+
+    var result = runScript(scriptSrc, parameters);
+
+    // Sophisticated.
+    if (result && result['tagName']) {
+      respond.setField('resultType', "ELEMENT");
+      respond.response = Utils.addToKnownElements(result, this.context);
+    } else if (result) {
+      respond.setField('resultType', "OTHER");
+      respond.response = result;
+    } else {
+      respond.setField('resultType', "NULL");
+    }
+
+  } catch (e) {
+    respond.isError = true;
+    respond.response = e;
+  }
+  respond.send();
+};
+
 FirefoxDriver.prototype.getCurrentUrl = function(respond) {
     respond.context = this.context;
     respond.response = "" + Utils.getBrowser(this.context).contentWindow.location;
@@ -110,6 +176,49 @@ FirefoxDriver.prototype.selectElementUsingXPath = function(respond, xpath) {
     }
 
     respond.send();
+};
+
+FirefoxDriver.prototype.selectElementUsingClassName = function(respond, name) {
+    var doc = Utils.getDocument(this.context);
+
+    if (doc["getElementsByClassName"]) {
+      var elements = doc.getElementsByClassName(name);
+      respond.context = this.context;
+
+      if (elements.length) {
+        respond.response = Utils.addToKnownElements(elements[0], this.context);
+      } else {
+        respond.isError = true;
+        respond.response = "Unable to find element with class name '" + name + "'";
+      }
+
+      respond.send();
+    } else {
+      this.selectElementUsingXPath(respond, "//*[contains(concat(' ',normalize-space(@class),' '),' " + name + " ')]");
+    }
+};
+
+FirefoxDriver.prototype.selectElementsUsingClassName = function(respond, name) {
+    var doc = Utils.getDocument(this.context)
+
+    if (doc["getElementsByClassName"]) {
+      var result = doc.getElementsByClassName(name);
+
+      var response = "";
+      for (var i = 0; i < result.length; i++) {
+          var element = result[i];
+          var index = Utils.addToKnownElements(element, this.context);
+          response += index + ",";
+      }
+      // Strip the trailing comma
+      response = response.substring(0, response.length - 1);
+
+      respond.context = this.context;
+      respond.response = response;
+      respond.send();
+    } else {
+      this.selectElementsUsingXPath(respond, "//*[contains(concat(' ',normalize-space(@class),' '),' " + name + " ')]");
+    }
 };
 
 FirefoxDriver.prototype.selectElementUsingLink = function(respond, linkText) {
@@ -193,19 +302,13 @@ FirefoxDriver.prototype.switchToDefaultContent = function(respond) {
     respond.send();
 }
 
+FirefoxDriver.prototype.switchToActiveElement = function(respond) {
+  var element = Utils.getActiveElement(this.context);
+  
+  respond.response = Utils.addToKnownElements(element, this.context);
+  respond.send();
+};
 
-//FirefoxDriver.prototype.switchToActiveElement = function(respond) {
-//    var doc = Utils.getDocument(this.context);
-//
-//    var active = null;
-//    if (doc["activeElement"]) {
-//        active = doc.activeElement;
-//    } else {
-//        active = this.activeElement;
-//    }
-//
-//    respond(this.context, "switchToActiveElement");
-//}
 
 FirefoxDriver.prototype.goBack = function(respond) {
     var browser = Utils.getBrowser(this.context);
@@ -255,7 +358,7 @@ FirefoxDriver.prototype.addCookie = function(respond, cookieString) {
     try {
       cookieManager.add(cookie.domain, cookie.path, cookie.name, cookie.value, cookie.secure, false, cookie.expiry);
     } catch(e) {
-      cookieManager.add(cookie.domain, cookie.path, cookie.name, cookie.value, cookie.secure, false, false, cookie.expiry);  
+      cookieManager.add(cookie.domain, cookie.path, cookie.name, cookie.value, cookie.secure, false, false, cookie.expiry);
     }
 
     respond.context = this.context;
@@ -265,7 +368,7 @@ FirefoxDriver.prototype.addCookie = function(respond, cookieString) {
 FirefoxDriver.prototype.getCookie = function(respond) {
     var cookieManager = Utils.getService("@mozilla.org/cookiemanager;1", "nsICookieManager2");
     var toReturn = "";
-    
+
     var location = Utils.getBrowser(this.context).contentWindow.location;
     var isForCurrentHost = function(c) {
         try {
@@ -274,7 +377,7 @@ FirefoxDriver.prototype.getCookie = function(respond) {
             return false;
         }
     }
-    
+
     var isForCurrentPath = function(c) {
         try {
         	return location.pathname.indexOf(c.path) != -1;
@@ -282,7 +385,7 @@ FirefoxDriver.prototype.getCookie = function(respond) {
         	return false;
         }
     }
-    
+
     var cookieToString = function(c) {
       return c.name + "=" + c.value + ";" + "domain=" + c.host + ";"
           + "path=" + c.path + ";" + "expires=" + c.expires + ";"

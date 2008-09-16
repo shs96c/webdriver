@@ -8,7 +8,7 @@
 #include <comdef.h>
 #include <stdlib.h>
 #include <string>
-
+#include <activscp.h>
 #include "atlbase.h"
 #include "atlstr.h"
 
@@ -19,15 +19,16 @@ long queryCount = 0;
 
 InternetExplorerDriver::InternetExplorerDriver()
 {
-	if (!SUCCEEDED(CoCreateInstance(CLSID_InternetExplorer, NULL, CLSCTX_ALL, IID_IWebBrowser2, (void**)&ie))) 
+	if (!SUCCEEDED(ie.CoCreateInstance(CLSID_InternetExplorer))) 
 	{
+		cerr << "Cannot create InternetExplorer instance" << endl;
 		throw "Cannot create InternetExplorer instance";
 	}
 
 	closeCalled = false;
-	currentFrame = -1;
+	pathToFrame = L"";
 
-	bringToFront();
+	setVisible(true);
 //	sink = new IeEventSink(ie);
 }
 
@@ -43,9 +44,8 @@ InternetExplorerDriver::~InternetExplorerDriver()
 
 void InternetExplorerDriver::close()
 {
-	if (closeCalled) {
+	if (closeCalled)
 		return;
-	}
 
 	ie->Quit();
 	closeCalled = true;
@@ -96,7 +96,7 @@ void InternetExplorerDriver::get(const wchar_t *url)
 	CComVariant dummy;
 
 	ie->Navigate2(&spec, &dummy, &dummy, &dummy, &dummy);
-	currentFrame = -1;
+	pathToFrame = L"";
 	waitForNavigateToFinish();
 }
 
@@ -110,142 +110,34 @@ void InternetExplorerDriver::goBack()
 	ie->GoBack();
 }
 
-ElementWrapper* InternetExplorerDriver::selectElementById(const wchar_t *elementId) 
+void InternetExplorerDriver::setSpeed(int speed)
 {
-	CComPtr<IHTMLDocument3> doc;
-	getDocument3(&doc);
-
-	IHTMLElement* element = NULL;
-	BSTR id = SysAllocString(elementId);
-	doc->getElementById(id, &element);
-	SysFreeString(id);
-	
-	if (element != NULL) {
-		CComVariant value;
-		element->getAttribute(CComBSTR(L"id"), 0, &value);
-		std::wstring converted = variant2wchar(value);
-		if (converted == elementId)
-		{
-			IHTMLDOMNode* node = NULL;
-			element->QueryInterface(__uuidof(IHTMLDOMNode), (void **)&node);
-			element->Release();
-			ElementWrapper* toReturn = new ElementWrapper(this, node);
-			node->Release();
-
-			return toReturn;
-		}
-
-		CComPtr<IHTMLDocument2> doc2;
-		getDocument(&doc2);
-
-		CComPtr<IHTMLElementCollection> allNodes;
-		doc2->get_all(&allNodes);
-		long length = 0;
-		CComPtr<IUnknown> unknown;
-		allNodes->get__newEnum(&unknown);
-		CComQIPtr<IEnumVARIANT> enumerator(unknown);
-
-		VARIANT var;
-		VariantInit(&var);
-		enumerator->Next(1, &var, NULL);
-		IDispatch *disp;
-		disp = V_DISPATCH(&var);
-
-		while (disp) 
-		{
-			CComQIPtr<IHTMLElement> curr(disp);
-			disp->Release();
-			if (curr) 
-			{
-				CComVariant value;
-				curr->getAttribute(CComBSTR(L"id"), 0, &value);
-				std::wstring converted = variant2wchar(value);
-				if (elementId == converted) 
-				{
-					CComQIPtr<IHTMLDOMNode> node(curr);
-					return new ElementWrapper(this, node);
-				}
-			}
-
-			VariantInit(&var);
-			enumerator->Next(1, &var, NULL);
-			disp = V_DISPATCH(&var);
-		}
-	}
-
-	throw "Cannot find element";
+	this->speed = speed;
 }
 
-ElementWrapper* InternetExplorerDriver::selectElementByLink(const wchar_t *elementLink)
+int InternetExplorerDriver::getSpeed()
+{
+	return speed;
+}
+
+ElementWrapper* InternetExplorerDriver::getActiveElement() 
 {
 	CComPtr<IHTMLDocument2> doc;
 	getDocument(&doc);
-	CComPtr<IHTMLElementCollection> linkCollection;
-	doc->get_links(&linkCollection);
-	
-	long linksLength;
-	linkCollection->get_length(&linksLength);
 
-	for (int i = 0; i < linksLength; i++) {
-		VARIANT idx;
-		idx.vt = VT_I4;
-		idx.lVal = i;
-		VARIANT zero;
-		zero.vt = VT_I4;
-		zero.lVal = 0;
-		CComPtr<IDispatch> dispatch;
-		linkCollection->item(idx, zero, &dispatch);
+	CComPtr<IHTMLElement> element;
+	doc->get_activeElement(&element);
 
-		CComQIPtr<IHTMLElement> element(dispatch);
-
-		CComBSTR linkText;
-		element->get_innerText(&linkText);
-
-		std::wstring converted = bstr2wstring(linkText);
-		if (converted == elementLink) {
-			CComQIPtr<IHTMLDOMNode> linkNode(element);
-			return new ElementWrapper(this, linkNode);
-		}
+	if (!element) {
+		// Grab the body instead
+		doc->get_body(&element);
 	}
 
-	throw "Cannot find element";
-}
+	if (!element)
+		return NULL;  // Should never happen
 
-ElementWrapper* InternetExplorerDriver::selectElementByName(const wchar_t *elementName) 
-{
-	CComPtr<IHTMLDocument3> doc;
-	getDocument3(&doc);
-
-	CComPtr<IHTMLElementCollection> elementCollection;
-	CComBSTR name = SysAllocString(elementName);
-	doc->getElementsByName(name, &elementCollection);
-	
-	long elementsLength;
-	elementCollection->get_length(&elementsLength);
-
-	for (int i = 0; i < elementsLength; i++) {
-		VARIANT idx;
-		idx.vt = VT_I4;
-		idx.lVal = i;
-		VARIANT zero;
-		zero.vt = VT_I4;
-		zero.lVal = 0;
-		CComPtr<IDispatch> dispatch;
-		elementCollection->item(idx, zero, &dispatch);
-
-		CComQIPtr<IHTMLElement> element(dispatch);
-
-		CComBSTR nameText;
-		CComVariant value;
-		element->getAttribute(CComBSTR(L"name"), 0, &value);
-		std::wstring converted = variant2wchar(value);
-		if (converted == elementName) {
-			CComQIPtr<IHTMLDOMNode> elementNode(element);
-			return new ElementWrapper(this, elementNode);
-		}
-	}
-
-	throw "Cannot find element";
+	CComQIPtr<IHTMLDOMNode> node(element);
+	return new ElementWrapper(this, node);
 }
 
 void InternetExplorerDriver::waitForNavigateToFinish() 
@@ -253,27 +145,34 @@ void InternetExplorerDriver::waitForNavigateToFinish()
 	VARIANT_BOOL busy;
 	ie->get_Busy(&busy);
 	while (busy == VARIANT_TRUE) {
-		Sleep(100);
+		wait(100);
 		ie->get_Busy(&busy);
 	}
 
 	READYSTATE readyState;
 	ie->get_ReadyState(&readyState);
 	while (readyState != READYSTATE_COMPLETE) {
-		Sleep(50);
+		wait(50);
 		ie->get_ReadyState(&readyState);
 	}
 
-	CComPtr<IDispatch> dispatch;;
+	CComPtr<IDispatch> dispatch = NULL;
 	ie->get_Document(&dispatch);
-	CComQIPtr<IHTMLDocument2, &__uuidof(IHTMLDocument2)>doc(dispatch);
+
+	CComQIPtr<IHTMLDocument2> doc(dispatch);
 	
+	if (!doc) {
+		// Perhaps it's not an HTML page. Wait a tiny bit and return
+		wait(200);
+		return;
+	}
+
 	waitForDocumentToComplete(doc);
 
-	IHTMLFramesCollection2* frames = NULL;
+	CComPtr<IHTMLFramesCollection2> frames;
 	doc->get_frames(&frames);
 
-	if (frames) {
+	if (frames != NULL) {
 		long framesLength = 0;
 		frames->get_length(&framesLength);
 
@@ -286,22 +185,33 @@ void InternetExplorerDriver::waitForNavigateToFinish()
 			VARIANT result;
 			frames->item(&index, &result);
 
-			IHTMLWindow2* window;
-			result.pdispVal->QueryInterface(__uuidof(IHTMLWindow2), (void**)&window);
+			if (result.vt != VT_DISPATCH) {
+				// We should really use an event-based model
+				wait(100);
+				continue;
+			}
+				 
+			CComQIPtr<IHTMLWindow2> window(result.pdispVal);
+			VariantClear(&result);
 
-			IHTMLDocument2* frameDoc;
+			if (!window) {
+				wait(150);
+				continue;
+			}
+
+			CComPtr<IHTMLDocument2> frameDoc;
 			window->get_document(&frameDoc);
 
-			waitForDocumentToComplete(frameDoc);
+			if (!frameDoc) {
+				wait(150);
+				continue;
+			}
 
-			frameDoc->Release();
-			window->Release();
-			VariantClear(&result);
+			waitForDocumentToComplete(frameDoc);
 		}
 
 		VariantClear(&index);
 	}
-	frames->Release();
 }
 
 void InternetExplorerDriver::waitForDocumentToComplete(IHTMLDocument2* doc)
@@ -311,16 +221,24 @@ void InternetExplorerDriver::waitForDocumentToComplete(IHTMLDocument2* doc)
 	std::wstring currentState = bstr2wstring(state);
 
 	while (currentState != L"complete") {
-		Sleep(50);
+		wait(50);
 		state.Empty();
 		doc->get_readyState(&state);
 		currentState = bstr2wstring(state);
 	}
 }
 
-void InternetExplorerDriver::switchToFrame(int frameIndex) 
+bool InternetExplorerDriver::switchToFrame(const wchar_t *pathToFrame) 
 {
-	currentFrame = frameIndex;
+	this->pathToFrame = pathToFrame;
+
+	CComPtr<IHTMLDocument2> doc;
+	getDocument(&doc);
+
+	if (!doc)
+		this->pathToFrame = L"";
+	
+	return doc != NULL;
 }
 
 std::wstring InternetExplorerDriver::getCookies()
@@ -346,9 +264,8 @@ void InternetExplorerDriver::addCookie(const wchar_t *cookieString)
 	doc->put_cookie(cookie);
 }
 
-HWND InternetExplorerDriver::bringToFront() 
+HWND InternetExplorerDriver::getHwnd() 
 {
-	setVisible(true);
 	HWND hWnd;
 	ie->get_HWND(reinterpret_cast<SHANDLE_PTR*>(&hWnd));
 
@@ -370,21 +287,13 @@ HWND InternetExplorerDriver::bringToFront()
 	return hWnd;
 }
 
-void InternetExplorerDriver::getDocument(IHTMLDocument2 **pdoc)
+void InternetExplorerDriver::getDefaultContentFromDoc(IHTMLWindow2 **result, IHTMLDocument2* doc)
 {
-	CComPtr<IDispatch> dispatch;
-	ie->get_Document(&dispatch);
-	
-	if (!dispatch) {
-		return;
-	}
-
-	CComQIPtr<IHTMLDocument2> doc(dispatch);
 	CComQIPtr<IHTMLFramesCollection2> frames;
 	doc->get_frames(&frames);
 
 	if (frames == NULL) {
-		*pdoc = doc.Detach();
+		doc->get_parentWindow(result);
 		return;
 	}
 
@@ -392,63 +301,310 @@ void InternetExplorerDriver::getDocument(IHTMLDocument2 **pdoc)
 	frames->get_length(&length);
 
 	if (!length) {
-		currentFrame = -1;
-		*pdoc = doc.Detach();
+		doc->get_parentWindow(result);
 		return;
 	}
 
-	if (currentFrame == -1) {
-		CComPtr<IHTMLDocument3> doc3;
-		getDocument3(&doc3);
+	CComQIPtr<IHTMLDocument3> doc3(doc);
 
-		CComPtr<IHTMLElementCollection> bodyTags;
-		CComBSTR bodyTagName(L"BODY");
-		doc3->getElementsByTagName(bodyTagName, &bodyTags);
+	CComPtr<IHTMLElementCollection> bodyTags;
+	CComBSTR bodyTagName(L"BODY");
+	doc3->getElementsByTagName(bodyTagName, &bodyTags);
 
-		long numberOfBodyTags = 0;
-		bodyTags->get_length(&numberOfBodyTags);
-	
-		if (numberOfBodyTags) {
-			*pdoc = doc.Detach();
-			return;
-		}
+	long numberOfBodyTags = 0;
+	bodyTags->get_length(&numberOfBodyTags);
 
-		currentFrame = 0;
+	if (numberOfBodyTags) {
+		// Not in a frameset. Return the current window
+		doc->get_parentWindow(result);
+		return;
 	}
 
 	VARIANT index;
 	index.vt = VT_I4;
-	index.lVal = currentFrame;
-	CComVariant result;
-	frames->item(&index, &result);
+	index.lVal = 0;
+	
+	CComVariant frameHolder;
+	frames->item(&index, &frameHolder);
 
-	CComQIPtr<IHTMLWindow2> win(result.pdispVal);
-	// Clear the reference to the top frame's doc reference and return the frame's
-	doc.Release();
-	win->get_document(&doc);
-	*pdoc = doc.Detach();
+	frameHolder.pdispVal->QueryInterface(__uuidof(IHTMLWindow2), (void**) result);
+}
+
+void InternetExplorerDriver::findCurrentFrame(IHTMLWindow2 **result)
+{
+	// Frame location is from _top. This is a good start
+	CComPtr<IDispatch> dispatch;
+	ie->get_Document(&dispatch);
+	if (!dispatch)
+		return;
+
+	CComQIPtr<IHTMLDocument2> doc(dispatch);
+
+	// If the current frame path is null or empty, find the default content
+	// The default content is either the first frame in a frameset or the body
+	// of the current _top doc, even if there are iframes.
+
+	if (pathToFrame == L"")
+	{
+		getDefaultContentFromDoc(result, doc);
+		if (result) {
+			return;
+		} else {
+			cerr << "Cannot locate default content." << endl;
+			// What can we do here?
+			return;
+		}
+	}
+
+	// Otherwise, tokenize the current frame and loop, finding the 
+	// child frame in turn
+	size_t len = pathToFrame.length() + 1;
+	wchar_t *path = new wchar_t[len];
+	wcscpy_s(path, len, pathToFrame.c_str());
+	wchar_t *next_token;
+	CComQIPtr<IHTMLWindow2> interimResult;
+	for (wchar_t* fragment = wcstok_s(path, L".", &next_token);
+		 fragment;
+		 fragment = wcstok_s(NULL, L".", &next_token))
+	{
+		if (!doc) { break; } // This is seriously Not Good but what can you do?
+
+		CComQIPtr<IHTMLFramesCollection2> frames;
+		doc->get_frames(&frames);
+
+		if (frames == NULL) { break; } // pathToFrame does not match. Exit.
+
+		long length = 0;
+		frames->get_length(&length);
+		if (!length) { break; } // pathToFrame does not match. Exit.
+
+		CComBSTR frameName(fragment);
+		VARIANT index;
+		// Is this fragment a number? If so, the index will be a VT_I4
+		int frameIndex = _wtoi(fragment);
+		if (frameIndex > 0 || wcscmp(L"0", fragment) == 0) {
+			index.vt = VT_I4;
+			index.lVal = frameIndex;
+		} else {
+			// Alternatively, it's a name
+			index.vt = VT_BSTR;
+			index.bstrVal = frameName;
+		}
+		
+		// Find the frame
+		CComVariant frameHolder;
+		frames->item(&index, &frameHolder);
+
+		interimResult.Release();
+		interimResult = frameHolder.pdispVal;
+
+		if (!interimResult) { break; } // pathToFrame does not match. Exit.
+
+		// TODO: Check to see if a collection of frames were returned. Grab the 0th element if there was. 
+
+		// Was there only one result? Next time round, please.
+		CComQIPtr<IHTMLWindow2> window(interimResult);
+		if (!window) { break; } // pathToFrame does not match. Exit.
+		
+		doc.Detach();
+		window->get_document(&doc);
+	}
+
+	if (interimResult)
+		*result = interimResult.Detach();
+	delete[] path;
+}
+
+void InternetExplorerDriver::getDocument(IHTMLDocument2 **pdoc)
+{
+	CComPtr<IHTMLWindow2> window;
+	findCurrentFrame(&window);
+
+	if (window)
+		window->get_document(pdoc);
 }
 
 void InternetExplorerDriver::getDocument3(IHTMLDocument3 **pdoc)
 {
-	CComPtr<IDispatch> dispatch;
-	ie->get_Document(&dispatch);
-
-	CComQIPtr<IHTMLDocument3> doc(dispatch);
+	CComPtr<IHTMLDocument2> doc2;
+	getDocument(&doc2);
+	
+	CComQIPtr<IHTMLDocument3> doc(doc2);
 	*pdoc = doc.Detach();
+}
+
+bool InternetExplorerDriver::getEval(IHTMLDocument2* doc, DISPID* evalId, bool* added) 
+{
+	CComPtr<IDispatch> scriptEngine;
+	doc->get_Script(&scriptEngine);
+
+	OLECHAR FAR* evalName = L"eval";
+    HRESULT hr = scriptEngine->GetIDsOfNames(IID_NULL, &evalName, 1, LOCALE_USER_DEFAULT, evalId);
+	if (FAILED(hr)) { 
+		*added = true;
+		// Start the script engine by adding a script tag to the page
+		CComPtr<IHTMLElement> scriptTag;
+		doc->createElement(L"<span>", &scriptTag);
+		CComBSTR addMe(L"<span id='__webdriver_private_span'>&nbsp;<script defer></script></span>");
+		scriptTag->put_innerHTML(addMe);
+
+		CComPtr<IHTMLElement> body;
+		doc->get_body(&body);
+		CComQIPtr<IHTMLDOMNode> node(body);
+		CComQIPtr<IHTMLDOMNode> scriptNode(scriptTag);
+
+		CComPtr<IHTMLDOMNode> generatedChild;
+		node->appendChild(scriptNode, &generatedChild);
+
+		scriptEngine.Release();
+		doc->get_Script(&scriptEngine);
+		hr = scriptEngine->GetIDsOfNames(IID_NULL, &evalName, 1, LOCALE_USER_DEFAULT, evalId);
+
+		if (FAILED(hr)) {
+			removeScript(doc);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void InternetExplorerDriver::removeScript(IHTMLDocument2* doc)
+{
+	CComQIPtr<IHTMLDocument3> doc3(doc);
+
+	if (!doc3)
+		return;
+
+	CComPtr<IHTMLElement> element;
+	CComBSTR id(L"__webdriver_private_span");
+	doc3->getElementById(id, &element);
+	
+	CComQIPtr<IHTMLDOMNode> elementNode(element);
+
+	if (elementNode) {
+		CComPtr<IHTMLElement> body;
+		doc->get_body(&body);
+		CComQIPtr<IHTMLDOMNode> bodyNode(body);
+		bodyNode->removeChild(elementNode, NULL);
+	}
+}
+
+bool InternetExplorerDriver::createAnonymousFunction(IDispatch* scriptEngine, DISPID evalId, const wchar_t *script, VARIANT* result)
+{
+	CComVariant script_variant(script);
+	DISPPARAMS parameters = {0};
+    parameters.cArgs = 1;
+    parameters.rgvarg = &script_variant;
+	EXCEPINFO exception;
+
+	HRESULT hr = scriptEngine->Invoke(evalId, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &parameters, result, &exception, 0);
+	if (FAILED(hr)) {
+	  if (DISP_E_EXCEPTION == hr) {
+		  wcerr << "Exception message was: " << exception.bstrDescription << endl;
+	  } else {
+		  wcerr << "Error code: " << GetLastError() << ". Failed to compile: " << script << endl;
+	  }
+
+  	  if (result) {
+		  result->vt = VT_USERDEFINED;
+		  result->bstrVal = exception.bstrDescription;
+	  }
+
+	  return false;
+	}
+
+	return true;
+}
+
+void InternetExplorerDriver::executeScript(const wchar_t *script, SAFEARRAY* args, VARIANT *result, bool tryAgain)
+{
+	CComPtr<IHTMLDocument2> doc;
+	getDocument(&doc);
+
+	CComPtr<IDispatch> scriptEngine;
+	doc->get_Script(&scriptEngine);
+
+	DISPID evalId;
+	bool added;
+	bool ok = getEval(doc, &evalId, &added);
+	
+	if (!ok) {
+		wcerr << "Unable to locate eval method" << endl;
+		return;
+	}
+
+	CComVariant tempFunction;
+	if (!createAnonymousFunction(scriptEngine, evalId, script, &tempFunction)) {
+		wcerr << "Cannot create anonymous function: " << script << endl;
+		if (added) { removeScript(doc); }
+		return;
+	}
+
+	if (tempFunction.vt != VT_DISPATCH) {
+		if (added) { removeScript(doc); }
+		return;
+	}
+
+	// Grab the "call" method out of the returned function
+	DISPID callid;
+	OLECHAR FAR* szCallMember = L"call";
+    HRESULT hr3 = tempFunction.pdispVal->GetIDsOfNames(IID_NULL, &szCallMember, 1, LOCALE_USER_DEFAULT, &callid);
+	if (FAILED(hr3)) {
+		wcerr << "Cannot locate call method on anonymous function: " << script << endl;
+	}
+
+	DISPPARAMS callParameters = { 0 };
+	int nargs = getLengthOf(args);	  
+
+	callParameters.cArgs = nargs + 1;
+
+	CComPtr<IHTMLWindow2> win;
+	doc->get_parentWindow(&win);
+	_variant_t *vargs = new _variant_t[nargs + 1];
+	vargs[nargs] = CComVariant(win);
+
+	long index;
+    for (int i = 0; i < nargs; i++)
+    {
+		index = i;
+		CComVariant v;
+		SafeArrayGetElement(args, &index, (void*) &v);
+		vargs[nargs - 1 - i] = new _variant_t(v);
+    }
+
+	callParameters.rgvarg = vargs;
+
+	EXCEPINFO exception;
+	HRESULT hr4 = tempFunction.pdispVal->Invoke(callid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &callParameters, result, &exception, 0);
+	if (FAILED(hr4)) {
+	  if (DISP_E_EXCEPTION == hr4) {
+		  wcerr << "Exception message was: " << exception.bstrDescription << endl;
+	  } else {
+		  wcerr << "Failed to execute: " << script << endl;
+	  }
+	  
+	  if (result) {
+		  result->vt = VT_USERDEFINED;
+		  result->bstrVal = exception.bstrDescription;
+	  }
+	}
+
+	if (added) { removeScript(doc); }
+
+	delete[] vargs;
 }
 
 IeEventSink::IeEventSink(IWebBrowser2* ie) 
 {
 	this->ie = ie;
-	this->ie->AddRef();
 
-//	HRESULT hr = AtlAdvise(this->ie, (IUnknown*) this, DIID_DWebBrowserEvents2, &eventSinkCookie);
+	AtlAdvise(this->ie, (IUnknown*) this, DIID_DWebBrowserEvents2, &eventSinkCookie);
 }
 
 IeEventSink::~IeEventSink() 
 {
-//	AtlUnadvise(ie, DIID_DWebBrowserEvents2, eventSinkCookie);
+	AtlUnadvise(ie, DIID_DWebBrowserEvents2, eventSinkCookie);
 }
 
 // IUnknown methods

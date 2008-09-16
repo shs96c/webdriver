@@ -5,6 +5,7 @@
 #include <Exdisp.h>
 #include <mshtml.h>
 #include <string>
+#include <vector>
 #include "ElementWrapper.h"
 
 class ElementWrapper;
@@ -29,32 +30,41 @@ public:
 	void goForward();
 	void goBack();
 
-	ElementWrapper* selectElementById(const wchar_t *elementId);
-	ElementWrapper* selectElementByLink(const wchar_t *elementLink);
-	ElementWrapper* selectElementByName(const wchar_t *elementName);
+	void setSpeed(int speed);
+	int getSpeed();
+
+	ElementWrapper* getActiveElement();
 	void getDocument(IHTMLDocument2 **pdoc);
+	void getDocument3(IHTMLDocument3 **pdoc);
 
 	void waitForNavigateToFinish();
-	void switchToFrame(int frameIndex);
+	bool switchToFrame(const wchar_t *pathToFrame);
 
 	std::wstring getCookies();
 	void addCookie(const wchar_t *cookieString);
 
-	HWND bringToFront();
+	HWND getHwnd();
+
+	void executeScript(const wchar_t *script, SAFEARRAY* args, VARIANT *result, bool tryAgain = true);
 
 private:
+	bool getEval(IHTMLDocument2* doc, DISPID* evalId, bool* added);
+	void removeScript(IHTMLDocument2* doc);
+	bool createAnonymousFunction(IDispatch* scriptEngine, DISPID evalId, const wchar_t *script, VARIANT* result);
 	void waitForDocumentToComplete(IHTMLDocument2* doc);
+	void getDefaultContentFromDoc(IHTMLWindow2 **result, IHTMLDocument2* doc);
+	void findCurrentFrame(IHTMLWindow2 **result);
+
 	IeEventSink* sink;
-	void getDocument3(IHTMLDocument3 **pdoc);
 	CComQIPtr<IWebBrowser2, &__uuidof(IWebBrowser2)> ie;
-	long currentFrame;
+	std::wstring pathToFrame;
+	int speed;
 
 	bool closeCalled;
 };
 
-class IeEventSink : public IDispatch
-{
-public:
+class IeEventSink : public IDispatch {
+ public:
 	IeEventSink(IWebBrowser2* ie);
 	~IeEventSink();
 
@@ -72,8 +82,8 @@ public:
 	STDMETHODIMP GetTypeInfoCount(UINT* pctinfo);
 	STDMETHODIMP GetTypeInfo(UINT typeInfoId, LCID localeContextId, ITypeInfo** pointerToTypeInfo);
 
-private:
-	IWebBrowser2* ie;
+ private:
+	CComPtr<IWebBrowser2> ie;
 	DWORD eventSinkCookie;
 };
 

@@ -7,19 +7,23 @@
 #include <jni.h>
 
 #include "InternetExplorerDriver.h"
-#include "Node.h"
 
 void throwRunTimeException(JNIEnv *, const char *message);
 void throwNoSuchElementException(JNIEnv *, const char *message);
+void throwNoSuchElementException(JNIEnv *, const wchar_t *message);
+void throwNoSuchFrameException(JNIEnv *, const wchar_t *message);
 void throwUnsupportedOperationException(JNIEnv *, const char *message);
 
 void startCom();
 
 jobject newJavaInternetExplorerDriver(JNIEnv *, InternetExplorerDriver* driver);
-jobject initJavaXPathNode(JNIEnv*, Node*);
 
+void wait(long millis);
 std::wstring variant2wchar(const VARIANT toConvert);
 std::wstring bstr2wstring(BSTR from);
 jstring wstring2jstring(JNIEnv *env, const std::wstring& text);
+
+long getLengthOf(SAFEARRAY* ary);
+void evaluateXPath();
 
 #endif

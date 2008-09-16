@@ -20,7 +20,7 @@
 <h1>Type Stuff</h1>
 
 <div id="result">
-    
+	&nbsp;
 </div>
 
 <div id="formageddon">
@@ -37,6 +37,7 @@
             <option value="bar">Bar</option>
         </select>
         <input type="checkbox" id="checkbox" value="checkbox thing" onchange="javascript:updateContent(this)"/>
+        <input id="clickField" type="text" onclick="document.getElementById('clickField').value='Clicked';" value="Hello"/>
     </form>
 </div>
 
@@ -71,9 +72,22 @@
            onkeyup="appendMessage('keyup')"
            onblur="appendMessage('blur')"
            onchange="appendMessage('change')"
-    />
+           />
 
-    <button type="button" id="plainButton" onclick="javascript:appendMessage('click ')" onmousedown="javascript:appendMessage('mousedown ')" onmouseup="javascript:appendMessage('mouseup ')"><b>Go somewhere</b></button>
+    <input id="changeable" name="changeable" onfocus="appendMessage('focus')" onchange="appendMessage('change')" onblur="appendMessage('blur')"/>
+           
+    <button type="button" id="plainButton" 
+    		onfocus="appendMessage('focus')"
+           	onkeydown="appendMessage('keydown')"
+           	onkeypress="appendMessage('keypress')"
+           	onkeyup="appendMessage('keyup')"
+           	onblur="appendMessage('blur')"
+           	onclick="appendMessage('click')"
+           	onmousedown="appendMessage('mousedown ')" 
+           	onmouseup="appendMessage('mouseup ')"
+    >
+        <b>Go somewhere</b>
+    </button>
     <button type="submit" id="submittingButton"><emph>submit</emph></button>
     <button type="button" id="jsSubmitButton" onclick="javascript:document.getElementById('on-form').submit();">Submitomatic</button>
 
@@ -98,13 +112,24 @@
 
 <div>
     <form>
-        <input type="text" id="keyReporter"
+        <input type="text" id="keyReporter" size="80"
                onkeyup="appendMessage('up: ' + event.keyCode)"
                onkeypress="appendMessage('press: ' + event.keyCode)"
                onkeydown="displayMessage(''); appendMessage('down: ' + event.keyCode)" />
+        <input name="suppress" onkeydown="if (event.preventDefault) event.preventDefault(); event.returnValue = false; return false;" onkeypress="appendMessage('press');"/>
     </form>
 </div>
 
+<!-- Used for testing styles -->
+<div style="background-color: green;" id="green-parent">
+  <p id="style1">This should be greenish</p>
+    <ul>
+      <li id="green-item">So should this</li>
+      <li id="red-item" style="background-color: red;">But this is red</li>
+    </ul>
+</div>
 
 </body>
 </html>
+
+

@@ -7,7 +7,7 @@
 #include <mshtml.h>
 
 #include "InternetExplorerDriver.h"
-#include "com_googlecode_webdriver_ie_InternetExplorerElement.h"
+#include "org_openqa_selenium_ie_InternetExplorerElement.h"
 
 class InternetExplorerDriver;
 
@@ -27,6 +27,7 @@ public:
 	bool isDisplayed();
 	bool toggle();
 	std::wstring getText();
+	std::wstring getValueOfCssProperty(const std::wstring& propertyName);
 
 	long getX();
 	long getY();
@@ -37,10 +38,13 @@ public:
 	void submit();
 
 	std::vector<ElementWrapper*>* getChildrenWithTagName(const std::wstring& tagName);
+	IHTMLElement* getWrappedElement();
+	InternetExplorerDriver* getParent();
 
 private:
 	std::wstring getTextAreaValue();
 	bool isCheckbox();
+	bool isRadio();
 	void findParentForm(IHTMLFormElement **pform);
 	IHTMLEventObj* newEventObject();
 	void fireEvent(IHTMLEventObj*, const OLECHAR*);

@@ -21,6 +21,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="htmlunit" />
     <orderEntryProperties />
   </component>
 </module>

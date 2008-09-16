@@ -14,9 +14,7 @@
     <orderEntry type="module" module-name="common" />
     <orderEntry type="module-library">
       <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/runtime/jaxen-1.1.1.jar!/" />
-        </CLASSES>
+        <CLASSES />
         <JAVADOC />
         <SOURCES />
       </library>

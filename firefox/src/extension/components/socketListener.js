@@ -95,6 +95,8 @@ SocketListener.prototype.executeCommand = function() {
             stream.close();
         },
 
+        setField : function(name, value) { sendBack[name] = value; },
+
         set commandName(name) { sendBack.commandName = name; },
         get commandName()     { return sendBack.commandName; },
         set elementId(id)     { sendBack.elementId = id; },
@@ -115,6 +117,7 @@ SocketListener.prototype.executeCommand = function() {
     // These are used to locate a new driver, and so not having one is a fine thing to do
     if (command.commandName == "findActiveDriver" ||
         command.commandName == "switchToWindow" ||
+        command.commandName == "getAllWindowHandles" ||
         command.commandName == "quit") {
 
         this.data = "";
@@ -234,6 +237,8 @@ SocketListener.prototype.isReadingLineCount = function() {
 
 SocketListener.prototype.switchToWindow = function(respond, windowId) {
     var lookFor = windowId;
+    if (typeof windowId != "string")
+        lookFor = windowId[0];
     var wm = Utils.getService("@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator");
     var allWindows = wm.getEnumerator(null);
 
@@ -263,6 +268,23 @@ SocketListener.prototype.switchToWindow = function(respond, windowId) {
     respond.send();
 };
 
+SocketListener.prototype.getAllWindowHandles = function(respond) {
+  var wm = Utils.getService("@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator");
+  var allWindows = wm.getEnumerator("navigator:browser");
+
+  var res = "";
+  var index = -1;
+  while (allWindows.hasMoreElements()) {
+    var win = allWindows.getNext();
+    index++;
+    if (win.top.fxdriver) {
+      res += index + ","
+    }
+  }
+
+  respond.response = res;
+  respond.send();
+}
 
 SocketListener.prototype.findActiveDriver = function(respond) {
     var win = this.wm.getMostRecentWindow("navigator:browser");
