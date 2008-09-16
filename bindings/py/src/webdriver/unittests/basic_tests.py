@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import re
+import time
 import sys
 import unittest
 from webdriver.firefox import WebDriver
@@ -51,6 +52,7 @@ class BasicTest (unittest.TestCase):
     self.driver.FindElementByLinkText("Open new window").Click()
     self.assertEquals(title_1, self.driver.GetTitle())
     self.driver.SwitchTo().Window("result")
+    time.sleep(2)
     self.assertEquals(title_2, self.driver.GetTitle())
     
   def testSwitchToFrameByIndex(self):
@@ -103,6 +105,11 @@ class BasicTest (unittest.TestCase):
     self.assertEquals("We Leave From Here", self.driver.GetTitle())
     self.driver.Navigate().Forward()
     self.assertEquals("We Arrive Here", self.driver.GetTitle())
+
+  def testGetAttribute(self):
+    self._loadPage("xhtmlTest")
+    elem = self.driver.FindElementById("select_volvo")
+    self.assertEquals("1", elem.GetAttribute("index"))
 
   def _loadSimplePage(self):
     self.driver.Get("http://localhost:8000/simpleTest.html")
