@@ -376,3 +376,9 @@ Utils.findElementsByXPath = function (xpath, contextNode, context) {
     }
     return indices;
 };
+
+Utils.log = function myDump(aMessage) {
+  var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+      .getService(Components.interfaces.nsIConsoleService);
+  consoleService.logStringMessage(aMessage);
+}

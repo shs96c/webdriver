@@ -53,11 +53,18 @@ class BasicTest (unittest.TestCase):
     self.driver.SwitchTo().Window("result")
     self.assertEquals(title_2, self.driver.GetTitle())
     
-  def testSwitchToFrame(self):
+  def testSwitchToFrameByIndex(self):
     self._loadPage("frameset")
     self.driver.SwitchTo().FrameByIndex(2)
     self.driver.SwitchTo().FrameByIndex(0)
     self.driver.SwitchTo().FrameByIndex(2)
+    checkbox = self.driver.FindElementById("checky")
+    checkbox.Toggle()
+    checkbox.Submit()
+
+  def testSwitchFrameByName(self):
+    self._loadPage("frameset")
+    self.driver.SwitchTo().FrameByName("third");
     checkbox = self.driver.FindElementById("checky")
     checkbox.Toggle()
     checkbox.Submit()

@@ -170,10 +170,14 @@ FirefoxDriver.prototype.selectElementsUsingXPath = function(respond, xpath) {
 
 FirefoxDriver.prototype.switchToFrame = function(respond, frameId) {
     var browser = Utils.getBrowser(this.context);
-    var frameDoc = Utils.findDocumentInFrame(browser, frameId[0]);
+
+    if (typeof frameId != "string")
+        frameId = frameId[0];
+    var frameDoc = Utils.findDocumentInFrame(browser, frameId);
 
     if (frameDoc) {
-        this.context = new Context(this.context.windowId, frameId[0]);
+        Utils.log(frameDoc);
+        this.context = new Context(this.context.windowId, frameId);
         respond.context = this.context.toString();
         respond.send();
     } else {

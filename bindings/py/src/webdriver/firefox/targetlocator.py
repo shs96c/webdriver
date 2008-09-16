@@ -15,3 +15,6 @@ class TargetLocator(webdriver.TargetLocator):
 
   def FrameByIndex(self, index):
     resp = self.conn.command("switchToFrame", str(index))
+
+  def FrameByName(self, frameName):
+    resp = self.conn.command("switchToFrame", frameName)
