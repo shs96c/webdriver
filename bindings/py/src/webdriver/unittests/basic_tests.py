@@ -57,8 +57,12 @@ class BasicTest (unittest.TestCase):
     self._loadPage("xhtmlTest")
     self.driver.FindElementByLinkText("Open new window").Click()
     self.assertEquals(title_1, self.driver.GetTitle())
-    self.driver.SwitchTo().Window("result")
-    time.sleep(2)
+    try:
+      self.driver.SwitchTo().Window("result")
+    except:
+      # This may fail because the window is not loading fast enough, so try again
+      time.sleep(1)
+      self.driver.SwitchTo().Window("result")
     self.assertEquals(title_2, self.driver.GetTitle())
     
   def testSwitchToFrameByIndex(self):
@@ -115,7 +119,12 @@ class BasicTest (unittest.TestCase):
   def testGetAttribute(self):
     self._loadPage("xhtmlTest")
     elem = self.driver.FindElementById("select_volvo")
-    self.assertEquals("1", elem.GetAttribute("index"))
+    self.assertEquals("xx", elem.GetAttribute("tag"))
+
+  def testGetImplicitAttribute(self):
+    self._loadPage("xhtmlTest")
+    elem = self.driver.FindElementById("select_saab")
+    self.assertEquals(1, elem.GetAttribute("index"))
 
   def _loadSimplePage(self):
     self.driver.Get("http://localhost:8000/simpleTest.html")
