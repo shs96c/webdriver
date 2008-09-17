@@ -32,6 +32,12 @@ class BasicTest (unittest.TestCase):
     elem = self.driver.FindElementByXPath("//h1")
     self.assertEquals("Heading", elem.GetText())
 
+  def testFindElementsByXpath(self):
+    self._loadPage("xhtmlTest")
+    elems = self.driver.FindElementsByXPath("//option")
+    self.assertEquals(4, len(elems))
+    self.assertEquals("saab", elems[1].GetAttribute("value"))
+
   def testFindElementsByName(self):
     self._loadPage("xhtmlTest")
     elem = self.driver.FindElementByName("x")
